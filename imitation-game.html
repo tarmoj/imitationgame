@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <meta name="viewport" content="width=540, initial-scale=0.7, maximum-scale=0.7, minimum-scale=0.7, user-scalable=no" />
+    <title>Imitation-game</title>
+    <meta content="Tarmo Johannes" id="author">
+	
+	<link type="text/css" rel="stylesheet" href="soundgames.css">
+	
+	<script src="kinetic-v5.1.0.js"></script> <!-- image movement etc-->
+    <script src="ws-functions.js"></script> <!-- websocket functions -->
+    
+    <script defer="defer">
+	
+	var playing = false;
+	var note, noiseLevel, noteStep, noiseStep;
+	var notes = 12, noiseLevels = 10;
+		
+	function drawEverything() {
+		var stage = new Kinetic.Stage({
+				 container: "container",
+				 width: 400,
+				 height: 200
+			   });
+
+		 var layer = new Kinetic.Layer();
+		 stage.add(layer);
+		 
+		 var stageRect =  new Kinetic.Rect({ // new name - fluteRect
+			x:30, y:30, 
+			width: stage.getWidth()-60,
+			height: stage.getHeight()-60,
+			//fill: "green",
+ 			fillLinearGradientStartPointX:200,
+ 			fillLinearGradientStartPointY: 170,
+ 			fillLinearGradientEndPointX: 200,
+ 			fillLinearGradientEndPointY: 30,
+ 			fillLinearGradientColorStops: [0, 'black', 0.7, 'darkblue', 1, 'lightblue'],
+
+			stroke: "darkgreen"
+			
+		 });
+		 
+		 layer.add(stageRect);
+		 
+		 for (var n=1;n<notes;n++)
+		 
+		 
+		 noteStep = stageRect.getWidth()/notes;
+		 noiseStep = stageRect.getHeight()/noiseLevels;
+		 
+		 var noteLines = new Array();
+		 
+		 for (var n=1;n<notes;n++) {
+			var x = stageRect.x()+n*noteStep;
+			noteLines[n] = new Kinetic.Line({
+				
+				points: [x,stageRect.y(),x,stageRect.y()+stageRect.getHeight()],
+				stroke: "green"
+			});
+			layer.add(noteLines[n]);
+		}
+		
+		
+		 
+		 var pointer = new Kinetic.Circle({
+				radius: noteStep*.7,
+				visible: false,
+				draggable: true, 
+				//x: stageRect.x()+stageRect.getWidth()/2, 
+				//y: stageRect.y()+stageRect.getHeight()/2,
+				fill: 'yellow',
+				stroke: 'red',
+				opacity: 0.8,
+				strokeWidth: 1, 
+				dragBoundFunc: function(pos) {
+					var newX=pos.x, newY= pos.y;
+					if (pos.y<stageRect.y()+2) newY = stageRect.y()+2;
+					if (pos.y>stageRect.y()+stageRect.getHeight()) newY = stageRect.y()+stageRect.getHeight();
+					if (pos.x<stageRect.x()) newX = stageRect.x();
+					if (pos.x>stageRect.x()+stageRect.getWidth()-2) newX = stageRect.x()+stageRect.getWidth()-2;
+					
+					return { x: newX, y: newY };
+				}
+			});
+		
+		layer.add(pointer);
+		
+		function setNoteAndNoise() {
+			//var pos = stage.getPointerPosition();
+			note = Math.floor((pointer.x()-stageRect.x()) / noteStep);
+			noiseLevel = Math.floor((stageRect.getHeight()-pointer.y()+stageRect.y()) / noiseStep);
+			console.log("note,noiseLevel",note, noiseLevel);
+		}
+		
+		pointer.on("dragmove", function() {
+		//console.log("xy",pointer.x(),pointer.y());
+			setNoteAndNoise();
+		});
+		
+		stageRect.on('mousedown touchstart', function() {
+			console.log("mousedown");
+			playing = true;
+			var pos = stage.getPointerPosition();
+			pointer.position(pos);
+			pointer.startDrag();
+			pointer.show();
+			setNoteAndNoise();
+			
+			//layer.draw();			
+			
+		});
+		
+		layer.draw();
+
+     } 
+	
+
+	function onMessage(evt)
+	{
+		// does server send any messages at all?
+		writeToScreen("Message from server: " + evt.data + '\n');
+ 		var mess_array = evt.data.split(" ");
+ 		//console.log(mess_array[0]);
+ 		if (mess_array[0] == "pause") {	
+			sendButton.disabled = true;
+			paused=true;
+			document.getElementById("messageText").innerHTML = "Wait and listen!"
+ 		}
+ 		 		
+	}
+
+	
+  
+  // UI functions --------------------------------------------------------
+		
+	function getRadioValue(name) {
+		var elements = document.getElementsByName(name);
+		var radioValue = -1; // signals that none of the buttons was selected
+		for (var i=0;  i<elements.length; i++) {
+			if (elements[i].checked) {
+				radioValue = elements[i].value;
+			}
+		}
+		return radioValue;
+	}
+	
+	function tester() {
+		
+		doSend("something");
+
+		setTimeout(function(){ tester()},500+Math.random()*3000);
+
+		
+	}
+	
+	function stopNote() {
+		if (playing) { // execute only when the note is on (pointer is active)
+			console.log("End note");
+			playing = false;
+			// noteoff to Csound		
+			drawEverything(); // hides also the pointer
+		}
+	}
+	
+	document.addEventListener('mouseup', stopNote, false );
+	document.addEventListener('touchend', stopNote, false );
+	
+	window.onload = function(){
+		
+		var sendButton = document.getElementById("sendButton");
+		var connectButton = document.getElementById("connectButton");
+		
+		doConnect(); // init websocket on start; suppose the server is ready
+		
+		drawEverything();
+		
+		connectButton.onclick = function() { 
+			doConnect();
+		}
+		
+		//document.onmouseup = stopNote;
+		//document.ontouchend = stopNote;
+		
+	};
+		
+	</script>
+  </head>
+  <body>
+    <span style='margin-left:440px'><small><i><a href="echogame_est.html">Eesti</a></i></small></span>
+    <h1>IMITATION GAME. <i>TEST</i></h1><br>
+    <i>BLA</i><br>
+    <form name="myform">
+
+    <br>
+
+     
+    Range:&nbsp;<input id="low" value="low" name="range" type="radio">low&nbsp;&nbsp; <input
+      checked="checked" value="medium" name="range" type="radio" id="medium">medium&nbsp;&nbsp;
+    <input value="high" name="range" type="radio" id="high">high <br>
+    <br>
+    Length of sound: <input value="short" name="type" type="radio">short&nbsp;&nbsp;
+    <input checked="checked" name="type" value="medium" type="radio">medium&nbsp;
+    &nbsp; <input value="long" name="type" type="radio">long<br>
+    <br>
+	
+   <div id="container"></div>
+    
+   
+    
+    Server address: <input value="ws://localhost:22022/ws" id="url" type="text"><br>
+    <button type="button" id="connectButton" onclick="doConnect();">Connect</button>
+    <!--<button type="button" id="disconnectButton">Disonnect</button>-->
+    <br>
+    <br>
+    <p><textarea id="outputtext" rows="5" cols="30" readonly></textarea> </p>
+    
+    
+    </form>
+   
+   
+   
+   
+  </body>
+</html>
