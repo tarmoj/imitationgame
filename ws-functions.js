@@ -45,6 +45,26 @@
 		} else 
 			writeToScreen("WebSocket is not open!");
 	}
+	
+	function doSendArray(arr) // the data must be an array of the type that the server knows to expect
+	{
+		if (websocket.readyState == 1) {
+			//var arr = new Float64Array(data); // to convert for any case
+			websocket.send(arr);
+			writeToScreen("sent " + arr.length*arr.BYTES_PER_ELEMENT + 'bytes \n');
+		} else 
+			writeToScreen("WebSocket is not open!");
+	}
+	
+	function doSendNumber(number) // UNTESTED!
+	{
+		if (websocket.readyState == 1) {
+			var arr = new Float64Array([number]);
+			websocket.send(new Float64Array([number]));
+			writeToScreen("sent " + arr.length*arr.BYTES_PER_ELEMENT + 'bytes \n');
+		} else 
+			writeToScreen("WebSocket is not open!");
+	}
 
 	
 	function writeToScreen(message)

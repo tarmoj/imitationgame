@@ -14,8 +14,9 @@
     <script defer="defer">
 	
 	var playing = false;
-	var note, noiseLevel, noteStep, noiseStep;
+	var note = -1, noiseLevel= -1, noteStep, noiseStep;
 	var notes = 12, noiseLevels = 10;
+	var NEWSTEP=0, NEWNOISE=1, NOTEON=11, NOTEOFF=10 ; // constants for commands
 		
 	function drawEverything() {
 		var stage = new Kinetic.Stage({
@@ -36,7 +37,7 @@
  			fillLinearGradientStartPointY: 170,
  			fillLinearGradientEndPointX: 200,
  			fillLinearGradientEndPointY: 30,
- 			fillLinearGradientColorStops: [0, 'black', 0.7, 'darkblue', 1, 'lightblue'],
+ 			fillLinearGradientColorStops: [0, 'black', 0.5, 'darkblue', 1, 'lightblue'],
 
 			stroke: "darkgreen"
 			
@@ -76,7 +77,7 @@
 				strokeWidth: 1, 
 				dragBoundFunc: function(pos) {
 					var newX=pos.x, newY= pos.y;
-					if (pos.y<stageRect.y()+2) newY = stageRect.y()+2;
+					if (pos.y<stageRect.y()) newY = stageRect.y();
 					if (pos.y>stageRect.y()+stageRect.getHeight()) newY = stageRect.y()+stageRect.getHeight();
 					if (pos.x<stageRect.x()) newX = stageRect.x();
 					if (pos.x>stageRect.x()+stageRect.getWidth()-2) newX = stageRect.x()+stageRect.getWidth()-2;
@@ -89,9 +90,21 @@
 		
 		function setNoteAndNoise() {
 			//var pos = stage.getPointerPosition();
-			note = Math.floor((pointer.x()-stageRect.x()) / noteStep);
-			noiseLevel = Math.floor((stageRect.getHeight()-pointer.y()+stageRect.y()) / noiseStep);
-			console.log("note,noiseLevel",note, noiseLevel);
+			var noteHere = Math.floor((pointer.x()-stageRect.x()) / noteStep);
+			var noiseHere = Math.floor((stageRect.getHeight()-pointer.y()+stageRect.y()) / noiseStep);
+			if (note != noteHere) { // check if note has changed
+				note = noteHere;
+				doSendArray(new Int8Array([NEWSTEP,note])); // send as bytes to reduce traffic
+				console.log("New note:",note);
+				
+			}
+			if (noiseLevel != noiseHere) { // check if note has changed
+				noiseLevel = noiseHere; 
+				doSendArray(new Int8Array([NEWNOISE,noiseLevel, noiseLevels ])); // send maxSteps as 3rd parameter
+				console.log("New noiseLevel:",noiseLevel ); // to 0..1
+			}
+			
+			
 		}
 		
 		pointer.on("dragmove", function() {
@@ -106,9 +119,8 @@
 			pointer.position(pos);
 			pointer.startDrag();
 			pointer.show();
-			setNoteAndNoise();
-			
-			//layer.draw();			
+			setNoteAndNoise();	// set the levels and make server set channel values first
+			doSendArray(new Int8Array([NOTEON]));
 			
 		});
 		
@@ -159,29 +171,22 @@
 		if (playing) { // execute only when the note is on (pointer is active)
 			console.log("End note");
 			playing = false;
-			// noteoff to Csound		
+			note = -1; noiseLevel = -1;		
 			drawEverything(); // hides also the pointer
+			doSendArray(new Int8Array([NOTEOFF]));
 		}
 	}
 	
 	document.addEventListener('mouseup', stopNote, false );
 	document.addEventListener('touchend', stopNote, false );
-	
+		
 	window.onload = function(){
-		
-		var sendButton = document.getElementById("sendButton");
-		var connectButton = document.getElementById("connectButton");
-		
 		doConnect(); // init websocket on start; suppose the server is ready
-		
 		drawEverything();
-		
+		var connectButton = document.getElementById("connectButton");
 		connectButton.onclick = function() { 
 			doConnect();
 		}
-		
-		//document.onmouseup = stopNote;
-		//document.ontouchend = stopNote;
 		
 	};
 		
@@ -209,7 +214,7 @@
     
    
     
-    Server address: <input value="ws://localhost:22022/ws" id="url" type="text"><br>
+    Server address: <input value="ws://192.168.1.220:22022/ws" id="url" type="text"><br>
     <button type="button" id="connectButton" onclick="doConnect();">Connect</button>
     <!--<button type="button" id="disconnectButton">Disonnect</button>-->
     <br>
