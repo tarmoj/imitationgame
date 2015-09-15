@@ -31,7 +31,9 @@ void CsEngine::run()
 		qDebug()<<"Could not open csound file "<<m_csd;
         return;
     }
-    CsoundPerformanceThread perfThread(&cs);
+
+
+	CsoundPerformanceThread perfThread(&cs);
     perfThread.Play();
 
     // kas siin üldse performance threadi vaja? vt. soundcarpet v CsdPlayerQt
@@ -42,6 +44,13 @@ void CsEngine::run()
     qDebug()<<"Stopping thread";
     perfThread.Stop();
     perfThread.Join();
+
+
+//	while(cs.PerformKsmps()==0 && mStop==false ); // this way cannot deal with channels
+
+//	//free Csound object
+//	cs.Reset(); // is it correct?
+
     mStop=false; // luba uuesti käivitamine
 }
 

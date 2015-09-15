@@ -91,16 +91,16 @@ void WsServer::processBinaryMessage(QByteArray message)
 		if (message[0]==NOTEON) {
 			QString command;
 			float instrno = FLUTEISNTRUMENT+(player+1)/100.0; // player+1 since first player would be .0
-			command.sprintf("i %.2f 0 %d %d\n", instrno, MAXDURATION,player ) ;
+			command.sprintf("i %.2f 0 %d %d", instrno, -1,player ) ;
 			qDebug()<<"NOTEON: "<<command;
-			//cs->csEvent(command);
+			cs->csEvent(command);
 		}
 		else if (message[0]==NOTEOFF) {
 			QString command;
 			float instrno = -(FLUTEISNTRUMENT+(player+1)/100.0); // player+1 since first player would be .0
-			command.sprintf("i %.2f 0 0\n", instrno) ;
+			command.sprintf("i %.2f 0 0.1", instrno) ;
 			qDebug()<<"NOTEOFF: "<<command;
-			//cs->csEvent(command);
+			cs->csEvent(command);
 		}
 
 		else if (message[0]==NEWSTEP) {
@@ -137,5 +137,10 @@ void WsServer::sendMessage(QWebSocket *socket, QString message )
     }
     socket->sendTextMessage(message);
 
+}
+
+void WsServer::setVolume(double volume)
+{
+	cs->setChannel("volume",(MYFLT)volume);
 }
 

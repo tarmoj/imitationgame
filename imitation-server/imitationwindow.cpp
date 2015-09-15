@@ -9,7 +9,7 @@ ImitationWindow::ImitationWindow(QWidget *parent) :
 	wsServer = new WsServer(22022);
 //	cs = new CsEngine("../imitation-game.csd");
 //	cs->start();
-//	cs->setChannel("volume",(MYFLT)ui->volumeSlider->value()/100); // send initial value
+	wsServer->setVolume((double)ui->volumeSlider->value()/100.0); // send initial value
 	connect(wsServer, SIGNAL(newConnection(int)), this, SLOT(setClientsCount(int)));
 //	connect(wsServer, SIGNAL(newEvent(QString)),cs,SLOT(csEvent(QString))  );
 }

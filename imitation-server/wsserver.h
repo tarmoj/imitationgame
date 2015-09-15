@@ -20,8 +20,7 @@ public:
     ~WsServer();
 
 	void sendMessage(QWebSocket *socket, QString message);
-	void setPaused(bool paused);
-	void send2all(QString message);
+	void setVolume(double volume);
 
 Q_SIGNALS:
     void closed();
