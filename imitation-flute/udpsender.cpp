@@ -31,3 +31,9 @@ void UdpSender::sendNumbersInString(QString message)
 	sendData(data);
 }
 
+void UdpSender::setHostAddress(QString address)
+{
+	qDebug()<<"New UDP receiver address: "<<address;
+	mHost = QHostAddress(address);
+}
+

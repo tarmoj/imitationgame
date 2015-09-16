@@ -19,7 +19,7 @@ ApplicationWindow {
             udpSender.sendNumbersInString(JS.NEWSTEP.toString()+","+JS.note.toString());
             console.log("New note:",JS.note);
             airColumnRect.width = (JS.note+1)*noteStep;
-            infoLabel.text = qsTr("Note: ")+JS.note.toString();
+            noteLabel.text = qsTr("Note: ")+JS.note.toString();
 
         }
 
@@ -33,16 +33,19 @@ ApplicationWindow {
             JS.noiseLevel = noiseHere;
             udpSender.sendNumbersInString(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // send maxSteps as 3rd parameter
             console.log("New noiseLevel:",JS.noiseLevel );
+            noiseLabel.text = qsTr("Noise level: ")+JS.noiseLevel.toString();
         }
 
 
-}
+    }
+
+    Component.onCompleted: udpSender.setHostAddress("192.168.1.220")
 
     menuBar: MenuBar {
         Menu {
-            title: qsTr("&File")
+            title: qsTr("&Options")
             MenuItem {
-                text: qsTr("&Open")
+                text: qsTr("&Host")
                 onTriggered: messageDialog.show(qsTr("Open action triggered"));
             }
             MenuItem {
@@ -58,35 +61,6 @@ ApplicationWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.fill: parent
 
-
-
-
-//        Button {
-//            id: button1
-//            x: -283
-//            width: 126
-//            height: 39
-//            text: qsTr("Note ON")
-//            anchors.top: parent.top
-//            anchors.topMargin: 10
-//            anchors.horizontalCenter: parent.horizontalCenter
-//            onPressedChanged: {
-//                var messageString;
-//                if (button1.pressed) {
-//                    var note = Math.floor(Math.random()*8);
-//                    var noise = Math.floor(Math.random()*10);
-//                    var noiseString = "101,"+noise.toString()+",10"; // last parameter NoiseSteps
-//                    var noteString = "100," + note.toString();
-//                    console.log(note, noise, noteString,noiseString);
-//                    udpSender.sendNumbersInString(noiseString);
-//                    udpSender.sendNumbersInString(noteString);
-//                    messageString = "11";
-//                } else {
-//                    messageString = "10";
-//                }
-//                udpSender.sendNumbersInString(messageString);
-//            }
-//        }
 
         Rectangle {
             id: controllerRect
@@ -142,12 +116,36 @@ ApplicationWindow {
 
         }
         Label {
-            id: infoLabel
+            id: noteLabel
             x: 303
             text: qsTr("note: 0")
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.top: parent.top
             anchors.topMargin: 16
+        }
+
+        Label {
+            id: noiseLabel
+            x: 303
+            text: qsTr("noise: 0")
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: noteLabel.bottom
+            anchors.topMargin: 6
+        }
+
+
+        Label {id: addrLabel; x:10; y:10; text:qsTr("Host address: ")}
+        TextField {
+            anchors.top: addrLabel.bottom
+            anchors.topMargin: 5
+            x:10
+            //height: 20; width:120;
+            text: qsTr("192.168.1.220")
+            //font.pointSize: 12
+            onEditingFinished: {
+                console.log("Editing finished");
+                udpSender.setHostAddress(text)
+            }
         }
     }
 }

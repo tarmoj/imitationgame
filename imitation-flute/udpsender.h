@@ -17,6 +17,7 @@ signals:
 public slots:
 	void sendData(QByteArray data);
 	void sendNumbersInString(QString message); // separated with commas like '0, 23, 4, 123'
+	void setHostAddress(QString address);
 
 private:
 	QUdpSocket * mSocket;

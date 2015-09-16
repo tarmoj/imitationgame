@@ -111,5 +111,7 @@ void CsEngine::setChannel(QString channel, MYFLT value)
 
 void CsEngine::csEvent(QString event_string)
 {
+	qDebug()<<"MESSAGE IN";
     cs.InputMessage(event_string.toLocal8Bit());
+	qDebug()<<"CSOUND DONE";
 }

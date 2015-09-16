@@ -68,6 +68,7 @@ void WsServer::readUdp()
 		command.sprintf("i %.2f 0 0.1", instrno) ;
 		qDebug()<<"NOTEOFF: "<<command;
 		cs->csEvent(command);
+
 	}
 
 	else if (message[0]==NEWSTEP) {
