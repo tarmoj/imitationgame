@@ -7,9 +7,19 @@
 #include <QtCore/QByteArray>
 #include <QtCore/QHash>
 #include <QHostAddress>
+#include <QUdpSocket>
 
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
+
+
+// COMMANDS sent FROM javascript or android client
+#define NEWSTEP 100
+#define NEWNOISE 101
+#define NOTEON 11  // syntax of array: [11,<step>,<noise>, {other parameters}]
+#define NOTEOFF 10
+#define MAXDURATION 10
+#define FLUTEISNTRUMENT 10 // instrument number of the flute instrument in csd
 
 
 class WsServer : public QObject
@@ -33,6 +43,7 @@ private Q_SLOTS:
     void processTextMessage(QString message);
 	void processBinaryMessage(QByteArray message);
     void socketDisconnected();
+	void readUdp();
 
 
 private:
@@ -40,10 +51,8 @@ private:
     QList<QWebSocket *> m_clients;
 	QList <QHostAddress> peerAdresses;
 	CsEngine *cs;
-	//void getFilenames();
-	//QHash<QString, int>  clientsHash;
-	//bool pauseIsOn;
-	//QList <QList <QStringList> >  soundFiles ; // directory structure: low/mid/high -> short/mid/long -> filenames
+	QUdpSocket *udpSocket;
+
 };
 
 

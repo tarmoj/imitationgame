@@ -20,10 +20,16 @@ WsServer::WsServer(quint16 port, QObject *parent) :
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &WsServer::onNewConnection);
         connect(m_pWebSocketServer, &QWebSocketServer::closed, this, &WsServer::closed);
-    }
+	}
 	cs = new CsEngine("../imitation-game.csd");
 	cs->start();
 	//TODO: set inital value from mainWindow UI
+
+	// UDP server to receive messages from android apps
+	udpSocket = new QUdpSocket(this);
+	udpSocket->bind(QHostAddress::Any, port+1);
+	qDebug()<<"Listening for UDP messages on port "<<port+1;
+	connect(udpSocket, SIGNAL(readyRead()), this, SLOT(readUdp()));
 }
 
 
@@ -32,6 +38,48 @@ WsServer::~WsServer()
 {
     m_pWebSocketServer->close();
     qDeleteAll(m_clients.begin(), m_clients.end());
+}
+
+void WsServer::readUdp()
+{
+	QByteArray message;
+	QHostAddress senderAddress;
+	quint16 senderPort;
+
+	message.resize(udpSocket->pendingDatagramSize());
+
+	udpSocket->readDatagram(message.data(), message.size(), &senderAddress, &senderPort);
+
+	if (!peerAdresses.contains(senderAddress)) {
+		qDebug()<<"New peer:"<< senderAddress.toString();
+		peerAdresses.append(senderAddress);
+	}
+	int player = peerAdresses.indexOf(senderAddress);
+	if (message[0]==NOTEON) {
+		QString command;
+		float instrno = FLUTEISNTRUMENT+(player+1)/100.0; // player+1 since first player would be .0
+		command.sprintf("i %.2f 0 %d %d", instrno, -1,player ) ;
+		qDebug()<<"NOTEON: "<<command;
+		cs->csEvent(command);
+	}
+	else if (message[0]==NOTEOFF) {
+		QString command;
+		float instrno = -(FLUTEISNTRUMENT+(player+1)/100.0); // player+1 since first player would be .0
+		command.sprintf("i %.2f 0 0.1", instrno) ;
+		qDebug()<<"NOTEOFF: "<<command;
+		cs->csEvent(command);
+	}
+
+	else if (message[0]==NEWSTEP) {
+		qDebug()<<"Player "<<player<<", nw step: "<<(MYFLT)message[1];
+		cs->setChannel("step"+QString::number(player),(MYFLT)message[1]);
+	}
+	else if (message[0]==NEWNOISE) {
+		MYFLT noiseLevel = (MYFLT)message[1]/message[2]; // convert to 0..1; array sent as NEWNOISE, noiselevel, MAXLEVEL
+		qDebug()<<"Player "<<player<<", nw noisevel: "<<noiseLevel;
+		cs->setChannel("noise"+QString::number(player),noiseLevel);
+	}
+
 }
 
 
@@ -65,13 +113,6 @@ void WsServer::processTextMessage(QString message)
 
 }
 
-// COMMANDS FROM javascript clientTODO: move to header /
-#define NEWSTEP 0
-#define NEWNOISE 1
-#define NOTEON 11  // syntax of array: [11,<step>,<noise>, {other parameters}]
-#define NOTEOFF 10
-#define MAXDURATION 10
-#define FLUTEISNTRUMENT 10 // instrument number of the flute instrument in csd
 
 // Sea Cs Class Ws alt, window: wsSwever->setVolume
 

@@ -27,5 +27,5 @@ void ImitationWindow::setClientsCount(int clientsCount)
 
 void ImitationWindow::on_volumeSlider_valueChanged(int value)
 {
-	//cs->setChannel("volume",(MYFLT) value/100.0);
+	wsServer->setVolume((MYFLT) value/100.0);
 }

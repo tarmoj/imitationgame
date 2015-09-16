@@ -37,8 +37,8 @@ chn_k "feedback",1
 chnset 0,"step1000"
 chnset 0.0001, "noise1000"
 chnset 0.5, "volume1000" ; bind with slider or some other controller
-chnset 0.5,"feedback"
-chnset 0.6, "volume"
+chnset 0,"feedback"
+chnset 06, "volume"
 
 
 
@@ -100,7 +100,7 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	; FLOW SETUP ---------------------------- 
 	aflute1 init 0 ; the bore sound
 	aenv1     linsegr    0, .06, 1.1*ipress, .2, ipress, .1, 0 ; blow envelope ;?? maybe more than 0.2	
-	aenv2     linenr   1, .01, .5, 0.001 ; declick, basically	
+	aenv2     linenr   1, .01, .2, 0.001 ; declick, basically	
 	kenvibr   linsegr    0, .5, 0, .5, 1, 0.1, 0 ; VIBRATO ENVELOPE - start after 0.5 seconds
 	
 	; THE VALUES MUST BE APPROXIMATELY -1 TO 1 OR THE CUBIC WILL BLOW UP
@@ -205,6 +205,7 @@ i 1902  0     1   6000      8.00    .9      .036     .4       .4
 
 </CsScore>
 </CsoundSynthesizer>
+
 
 
 
@@ -452,7 +453,7 @@ i 1902  0     1   6000      8.00    .9      .036     .4       .4
 </bsbPanel>
 <bsbPresets>
 </bsbPresets>
-<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="254" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
+<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="254" width="655" height="346" visible="false" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
 i 10 0 4 0 320 0.2 
 i 10 0 1 0 415 0.3 
 i 10 0 2 0 440 0.7 

@@ -12,12 +12,14 @@ CsEngine::CsEngine(char *csd)
     errorValue=0;
 }
 
-/*
-CsEngine::~CsEngine()
-{
-    free cs;
 
-} */
+//CsEngine::~CsEngine()
+//{
+//	stpo();
+//	join();
+//	free cs;
+
+//}
 
 
 
@@ -37,19 +39,19 @@ void CsEngine::run()
     perfThread.Play();
 
     // kas siin üldse performance threadi vaja? vt. soundcarpet v CsdPlayerQt
-
+/*
     while (!mStop  && perfThread.GetStatus() == 0 ) {
 		usleep(10000);
     }
     qDebug()<<"Stopping thread";
     perfThread.Stop();
     perfThread.Join();
+*/
 
-
-//	while(cs.PerformKsmps()==0 && mStop==false ); // this way cannot deal with channels
+	while(cs.PerformKsmps()==0 && mStop==false ); // this way cannot deal with channels
 
 //	//free Csound object
-//	cs.Reset(); // is it correct?
+	cs.Reset(); // is it correct?
 
     mStop=false; // luba uuesti käivitamine
 }
