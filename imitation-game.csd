@@ -26,13 +26,13 @@ gaL init 0
 gaR init 0
 ;giLowFrequencies[] fillarray 50,60,70,80
 
-gkSteps[] fillarray 1,9/8,5/4,11/8,3/2,14/8,7/4,2,17/8,18/8,19/8, 21/8
+gkSteps[] fillarray 1,9/8,5/4,11/8,3/2,13/8,7/4,2,17/8,18/8,19/8, 21/8
 
 ;;CHANNELS
 chn_k "step0", 1
-chn_k "volume",1
+chn_k "volume",3
 chn_k "noise0",1
-chn_k "feedback",1
+chn_k "feedback",3
 
 chnset 0,"step1000"
 chnset 0.0001, "noise1000"
@@ -43,18 +43,34 @@ chnset 06, "volume"
 
 
 instr lowFlute ; to play low frequencies for feedback, usually played from MIDI keyboard (or send index via p4
+
 	if (p4==0) then 
 		inotenum notnum
 		index = inotenum % 12
+		
+		if (inotenum<60) then
+			instrno = nstrnum("flute") + index/1000
+			iplayer = 1000 ; to signal about low notes
+			ibaseFreq = cpspch(4.00)
+		else
+			iplayer = 0
+			instrno = nstrnum("flute") + inotenum/10000
+			ibaseFreq = cpspch(8.00)
+		endif
+		
 	else
 		index = p4
+		
 	endif
-	ifreq = cpspch(4.00)* i(gkSteps[index]) ; think about the frequency!
-	print ifreq
-	print p3 ; to test -  what is it when pressed from keyboard
-	instrno = nstrnum("flute") + index/1000
-	iplayer = 1000 ; to signal about low notes
-	schedule instrno, 0, p3, iplayer ; fraction 0.001 tells that low one ; TEST with different feedbacks!
+	
+	
+	
+	ifreq =  ibaseFreq* i(gkSteps[index])  ; think about the frequency!
+	print index, ifreq
+
+	
+	
+	schedule instrno, 0, p3, iplayer, ifreq ; fraction 0.001 tells that low one ; TEST with different feedbacks!
 	
 	if (release()==1) then
 		turnoff2 instrno, 4, 1
@@ -99,7 +115,7 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	
 	; FLOW SETUP ---------------------------- 
 	aflute1 init 0 ; the bore sound
-	aenv1     linsegr    0, .06, 1.1*ipress, .2, ipress, .1, 0 ; blow envelope ;?? maybe more than 0.2	
+	aenv1     linsegr    0, .1, 1.1*ipress, .2, ipress, .1, 0 ; blow envelope ;?? maybe more than 0.2	; rise was 0.06
 	aenv2     linenr   1, .01, .2, 0.001 ; declick, basically	
 	kenvibr   linsegr    0, .5, 0, .5, 1, 0.1, 0 ; VIBRATO ENVELOPE - start after 0.5 seconds
 	
@@ -150,7 +166,7 @@ alwayson "superBore"
 
 instr superBore; collects and outputs sound from all "flute" insruments (Sum of gemb) and send global feedback (gaflute) + main output
 
-	ifqc = 100;cpspch(7.01) ; fixed length 100 on hea.
+	ifqc = cpspch(6.01) ; fixed length 100 on hea.
 	gaemb limit gaemb, -2, 2 ; find some other way to tame gaemb 
 	avalue    tone      gaemb, 2000 ; sum of all embouchure's
 	
@@ -159,7 +175,10 @@ instr superBore; collects and outputs sound from all "flute" insruments (Sum of 
 	gaflute     deltapi 1/ifqc-12/sr;+asum1/20000 ;afqc
           delayw    avalue
 	
-	
+	; midi controllers
+	ctrlinit 1,1,0
+	kfeedback ctrl7 1,1,0,1
+	chnset kfeedback, "feedback"
 	; main out
 	
 	kvolume port (chnget:k("volume")),0.02
@@ -182,29 +201,11 @@ endin
 
 </CsInstruments>
 <CsScore>
-; SINE
-f3 0 1024 10 1
-f 0 3600
-s
-
-
-; SLIDE FLUTE
-;  START  DUR  AMPLITUDE PITCH  PRESSURE  BREATH  FEEDBK1  FEEDBK2
-i 1902  0     16   6000      8.00    .9      .036     .4       .4
-i 1902  +      4    .        8.01    .95         .       .        .
-i 1902  .      4    .        8.03    .97     .       .        .
-i 1902  .      4    .        8.04    .98       .       .        .
-i 1902  .      4    .        8.05    .99      .       .        .
-i 1902  .     16    .        9.00    1.0         .       .        .
-s
-f 0 3600
-; test:
-;  START  DUR  AMPLITUDE PITCH  PRESSURE  BREATH  FEEDBK1  FEEDBK2
-i 1902  0     1   6000      8.00    .9      .036     .4       .4
-
 
 </CsScore>
 </CsoundSynthesizer>
+
+
 
 
 
@@ -288,11 +289,11 @@ i 1902  0     1   6000      8.00    .9      .036     .4       .4
   <height>100</height>
   <uuid>{a435f8e8-c36e-4b55-9055-96d52a36a151}</uuid>
   <visible>true</visible>
-  <midichan>0</midichan>
-  <midicc>0</midicc>
+  <midichan>1</midichan>
+  <midicc>1</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.69000000</value>
+  <value>0.42000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
@@ -444,7 +445,7 @@ i 1902  0     1   6000      8.00    .9      .036     .4       .4
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.17054264</value>
+  <value>0.00000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>

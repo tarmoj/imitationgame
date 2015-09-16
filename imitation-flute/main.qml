@@ -122,7 +122,7 @@ ApplicationWindow {
                 onReleased: {
                     udpSender.sendNumbersInString(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
-                    JS.note = -1; JS.noise = -1;
+                    JS.note = -1; JS.noiseLevel = -1;
                 }
                 onMouseXChanged: if (containsPress) {
                                      setNote(mouseX)
