@@ -16,9 +16,6 @@ private:
     char *m_csd;
     int errorValue;
     QString errorString;
-    int sliderCount;
-
-    //QMutex mutex;
 
 public:
     explicit CsEngine(char *csd);
@@ -34,13 +31,11 @@ public:
     double getChannel(QString);
     Csound *getCsound();
 signals:
-    //void newSliderValue(int silderno, int value);
-    //void newClient(int clientsCount);
-    void newCounterValue(int value);
+	//void newCounterValue(int value);
 
 public slots:
     void csEvent(QString event_string);
-    //void compileOrc(QString code);
+	void compileOrc(QString code);
     void restart();
 };
 

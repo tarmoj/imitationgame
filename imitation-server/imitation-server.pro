@@ -24,4 +24,4 @@ HEADERS  += imitationwindow.h \
 
 FORMS    += imitationwindow.ui
 
-unix|win32: LIBS += -lcsnd6 -lcsound64
+unix|win32: LIBS += -lcsnd6 -lcsound64 -llo

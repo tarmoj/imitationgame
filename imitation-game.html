@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="content-type">
-    <meta name="viewport" content="width=540, initial-scale=0.7, maximum-scale=0.7, minimum-scale=0.7, user-scalable=no" />
+    <meta name="viewport" content="width=540, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no" />
     <title>Imitation-game</title>
     <meta content="Tarmo Johannes" id="author">
 	
@@ -14,19 +14,20 @@
     <script defer="defer">
 	
 	var playing = false;
-	var note = -1, noiseLevel= -1, noteStep, noiseStep;
+	var note = -1, noiseLevel= -1, noteStep, noiseStep, vibrato=-1, pan=-1;
 	var notes = 12, noiseLevels = 10;
-	var NEWSTEP=100, NEWNOISE=101, NOTEON=11, NOTEOFF=10 ; // constants for commands
+	var NEWSTEP=100, NEWNOISE=101, NOTEON=11, NOTEOFF=10, NEWVIBRATO=102, NEWPAN=103 ; // constants for commands
 		
 	function drawEverything() {
 		var stage = new Kinetic.Stage({
 				 container: "container",
-				 width: 400,
+				 width:  window.innerWidth *0.75,
 				 height: 200
 			   });
 
 		 var layer = new Kinetic.Layer();
 		 stage.add(layer);
+		 
 		 
 		 var stageRect =  new Kinetic.Rect({ // new name - fluteRect
 			x:30, y:30, 
@@ -64,9 +65,9 @@
 		}
 		
 		
-		 
+		 var pointerRadius = Math.min(noteStep, stageRect.getHeight()/2) *0.6;
 		 var pointer = new Kinetic.Circle({
-				radius: noteStep*.7,
+				radius: pointerRadius,
 				visible: false,
 				draggable: true, 
 				//x: stageRect.x()+stageRect.getWidth()/2, 
@@ -119,8 +120,9 @@
 			pointer.position(pos);
 			pointer.startDrag();
 			pointer.show();
-			setNoteAndNoise();	// set the levels and make server set channel values first
-			doSendArray(new Int8Array([NOTEON]));
+			setNoteAndNoise();	// set the levels and make server set channel values firstparseInt
+			console.log("Pan: ", document.myform.pan.value);
+			doSendArray(new Int8Array([NOTEON, parseInt(document.myform.pan.value) ])); // send pan with NOTEON
 			
 		});
 		
@@ -129,36 +131,23 @@
      } 
 	
 
-	function onMessage(evt)
+	function onMessage(evt) // not used
 	{
-		// does server send any messages at all?
 		writeToScreen("Message from server: " + evt.data + '\n');
- 		var mess_array = evt.data.split(" ");
- 		//console.log(mess_array[0]);
- 		if (mess_array[0] == "pause") {	
-			sendButton.disabled = true;
-			paused=true;
-			document.getElementById("messageText").innerHTML = "Wait and listen!"
- 		}
- 		 		
+ 		//var mess_array = evt.data.split(" ");
+ 		//console.log(mess_array[0]); 		
 	}
 
+	function newVibrato(value) {
+		if (value!=Vibrato) {
+		}
+	}
 	
   
   // UI functions --------------------------------------------------------
 		
-	function getRadioValue(name) {
-		var elements = document.getElementsByName(name);
-		var radioValue = -1; // signals that none of the buttons was selected
-		for (var i=0;  i<elements.length; i++) {
-			if (elements[i].checked) {
-				radioValue = elements[i].value;
-			}
-		}
-		return radioValue;
-	}
 	
-	function tester() {
+	function tester() { // not implemented
 		
 		doSend("something");
 
@@ -179,16 +168,40 @@
 	
 	document.addEventListener('mouseup', stopNote, false );
 	document.addEventListener('touchend', stopNote, false );
-		
+	
+	window.onresize = drawEverything;
+	
+	function newVibrato(value) { // value is 0.100, vibrato 0..10
+		value = Math.floor(parseInt(value)/10);
+		if (value != vibrato) {
+			vibrato = value;
+			console.log("New vibrato: ", vibrato);
+			doSendArray(new Int8Array([NEWVIBRATO,vibrato]));
+		}
+	}
+	
+	function newPan(value) { // value is 0.100, pan 0..10
+		value = Math.floor(parseInt(value)/10);
+		if (value != pan) {
+			pan = value;
+			console.log("New pan: ", pan);
+			doSendArray(new Int8Array([NEWPAN,pan]));
+		}
+	}
+	
 	window.onload = function(){
 		doConnect(); // init websocket on start; suppose the server is ready
 		drawEverything();
+		newVibrato(document.myform.vibrato.value);
+		newPan(document.myform.pan.value);
 		var connectButton = document.getElementById("connectButton");
 		connectButton.onclick = function() { 
 			doConnect();
 		}
 		
 	};
+	
+	
 		
 	</script>
   </head>
@@ -201,20 +214,14 @@
     <br>
 
      
-    Range:&nbsp;<input id="low" value="low" name="range" type="radio">low&nbsp;&nbsp; <input
-      checked="checked" value="medium" name="range" type="radio" id="medium">medium&nbsp;&nbsp;
-    <input value="high" name="range" type="radio" id="high">high <br>
-    <br>
-    Length of sound: <input value="short" name="type" type="radio">short&nbsp;&nbsp;
-    <input checked="checked" name="type" value="medium" type="radio">medium&nbsp;
-    &nbsp; <input value="long" name="type" type="radio">long<br>
-    <br>
+   Panning (taken only on the note start ): <i>Left</i> <input type="range" class="range" id="pan" min=0 max=100 step=1 value=50 oninput="newPan(this.value)" > <i>Right</i> <br><br>
+   Vibrato amplitude: <i>none</i> <input type="range" class="range" id="vibrato" min=0 max=100 step=1 value=50 oninput='newVibrato(this.value)'> <i>max</i> <br><br>
 	
    <div id="container"></div>
     
    
     
-    Server address: <input value="ws://192.168.43.204:22022/ws" id="url" type="text"><br>
+    Server address: <input value="ws://localhost:22022/ws" id="url" type="text"><br>
     <button type="button" id="connectButton" onclick="doConnect();">Connect</button>
     <!--<button type="button" id="disconnectButton">Disonnect</button>-->
     <br>

@@ -9,6 +9,9 @@
 #include <QHostAddress>
 #include <QUdpSocket>
 
+//test
+#include <lo/lo.h>
+
 QT_FORWARD_DECLARE_CLASS(QWebSocketServer)
 QT_FORWARD_DECLARE_CLASS(QWebSocket)
 
@@ -16,6 +19,8 @@ QT_FORWARD_DECLARE_CLASS(QWebSocket)
 // COMMANDS sent FROM javascript or android client
 #define NEWSTEP 100
 #define NEWNOISE 101
+#define NEWVIBRATO 102
+#define NEWPAN 103
 #define NOTEON 11  // syntax of array: [11,<step>,<noise>, {other parameters}]
 #define NOTEOFF 10
 #define MAXDURATION 10
@@ -52,6 +57,7 @@ private:
 	QList <QHostAddress> peerAdresses;
 	CsEngine *cs;
 	QUdpSocket *udpSocket;
+	lo_address target;
 
 };
 

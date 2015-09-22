@@ -80,20 +80,19 @@ MYFLT CsEngine::getChannel(QString channel)
     return cs.GetChannel(channel.toLocal8Bit());
 }
 
-//void CsEngine::compileOrc(QString code)
-//{
+void CsEngine::compileOrc(QString code)
+{
 
-//    //qDebug()<<"Code to compile: "<<code;
-//    //mutex.lock(); // is it necessary?
-//    QString message;
-//    errorValue =  cs.CompileOrc(code.toLocal8Bit());
-//    if ( errorValue )
-//        message = "Could not compile the code";
-//    else
-//        message = "OK";
-//    //mutex.unlock();
+	//qDebug()<<"Code to compile: "<<code;
+	QString message;
+	errorValue =  cs.CompileOrc(code.toLocal8Bit());
+	if ( errorValue )
+		message = "Could not compile the code";
+	else
+		message = "OK";
+	qDebug()<<message;
 
-//}
+}
 
 void CsEngine::restart()
 {

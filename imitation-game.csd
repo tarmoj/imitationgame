@@ -32,13 +32,18 @@ gkSteps[] fillarray 1,9/8,5/4,11/8,3/2,13/8,7/4,2,17/8,18/8,19/8, 21/8
 chn_k "step0", 1
 chn_k "volume",3
 chn_k "noise0",1
+chn_k "pan0",1
+chn_k "vibrato0",1
 chn_k "feedback",3
 
+chnset 0.5, "pan0" 
 chnset 0,"step1000"
-chnset 0.0001, "noise1000"
+chnset 0.01, "noise1000" ; 0.0001
 chnset 0.5, "volume1000" ; bind with slider or some other controller
+chnset 0.5, "pan1000"
+chnset 0, "vibrato1000"
 chnset 0,"feedback"
-chnset 06, "volume"
+chnset 0.6, "volume"
 
 
 
@@ -78,10 +83,29 @@ instr lowFlute ; to play low frequencies for feedback, usually played from MIDI 
 
 endin
 
+#define NOTEON #11#
+#define NOTEOFF #10#
 
+alwayson "osc"
+instr osc ; Taasta! port 8008
+	ihandle OSCinit 8008
+	kcommand init 0
+	kplayer init 0
+	kinstrno init 0
+	kmessage OSClisten ihandle, "/event", "iif", kcommand, kplayer, kinstrno
+	
+	if (kmessage==1) then 
+		if (kcommand==$NOTEON) then
+			event "i",kinstrno,0,-1, kplayer
+		elseif (kcommand==$NOTEOFF) then
+			turnoff2 abs(kinstrno), 4, 1
+		endif
+	endif
+	
 
+endin
 
-schedule 10,  0,     1,   0, 0
+schedule 10,  0,     1,   0, 0,0.5
 
 instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE 
 
@@ -101,11 +125,18 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	; get pitch by step - it can be changed via channel value
 	StepChannel sprintf "step%d", iplayer
 	SnoiseChannel sprintf "noise%d", iplayer
-	;prints StepChannel
+	SpanChannel sprintf "pan%d", iplayer
+	SvibratoChannel sprintf "vibrato%d", iplayer
+	prints SvibratoChannel
 	kstep chnget StepChannel
 	knoise port chnget:k(SnoiseChannel), 0.1,chnget:i(SnoiseChannel)
 	;TODO define MAXNOISELEVEL; MINNOISELEVEL
 	knoiseLevel = 0.001 + knoise*(0.2-0.001)
+	
+	kvibratoLevel port chnget:k(SvibratoChannel),0.05,chnget:i(SvibratoChannel)
+	
+	kpan port chnget:k(SpanChannel),0.05,chnget:i(SpanChannel)	
+
 	
 	kfreq init ifqc
 	if (p5==0) then ; if freq was given, use that
@@ -115,18 +146,17 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	
 	; FLOW SETUP ---------------------------- 
 	aflute1 init 0 ; the bore sound
-	aenv1     linsegr    0, .1, 1.1*ipress, .2, ipress, .1, 0 ; blow envelope ;?? maybe more than 0.2	; rise was 0.06
+	aenv1     linsegr    0, .06, 1.1*ipress, .2, ipress, .5, 0 ; blow envelope ;?? maybe more than 0.2	; rise was 0.06
 	aenv2     linenr   1, .01, .2, 0.001 ; declick, basically	
-	kenvibr   linsegr    0, .5, 0, .5, 1, 0.1, 0 ; VIBRATO ENVELOPE - start after 0.5 seconds
+	kenvibr   linsegr    0, .8, 0, .5, 1, 0.1, 1 ; VIBRATO ENVELOPE - start after 0.5 seconds
 	
 	; THE VALUES MUST BE APPROXIMATELY -1 TO 1 OR THE CUBIC WILL BLOW UP
 	aflow1    rand      aenv1 ; noise
 	avibr init 0
-	;avibr     oscil     .01*kenvibr, 5, 3
+	avibr   poscil     .05*kenvibr*kvibratoLevel, 2+kvibratoLevel*4
 	
 	; ibreath CAN BE USED TO ADJUST THE NOISE LEVEL
 	asum1     =         knoiseLevel *aflow1 + aenv1 + avibr 
-	; ikkagi, miks + aenv - tõstab üle 0?
 	asum2     =         asum1 + aflute1*ifeedbk1 ; noise + feedback sound from bore 
 	
 	
@@ -154,9 +184,9 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	;output is from instr bore
 	aout = avalue*iamp*aenv2
 	aout clip aout, 0, 0dbfs*0.95
-  	aL,aR pan2 aout, 0
+  	aL,aR pan2 aout, kpan
   	gaL += aL
-  	gaR += gaR
+  	gaR += aR
     ;outs       aout, aout
 
 endin
@@ -185,7 +215,7 @@ instr superBore; collects and outputs sound from all "flute" insruments (Sum of 
 	kvolume *=0.5
 	
 	gaL clip gaL, 0, 0dbfs*0.95
-	gaR limit gaL, -0.99, 0.99 ; for any case, if something wants to blow
+	gaL limit gaL, -0.99, 0.99 ; for any case, if something wants to blow
 	gaR clip gaR, 0, 0dbfs*0.95
 	gaR limit gaR, -0.99, 0.99 ; for any case, if something wants to blow
 	outs gaL*kvolume, gaR*kvolume
@@ -216,6 +246,10 @@ endin
 
 
 
+
+
+
+
 <bsbPanel>
  <label>Widgets</label>
  <objectName/>
@@ -230,7 +264,7 @@ endin
   <g>255</g>
   <b>255</b>
  </bgcolor>
- <bsbObject type="BSBScrollNumber" version="2">
+ <bsbObject version="2" type="BSBScrollNumber">
   <objectName>step0</objectName>
   <x>119</x>
   <y>153</y>
@@ -263,7 +297,7 @@ endin
   <randomizable group="0">false</randomizable>
   <mouseControl act=""/>
  </bsbObject>
- <bsbObject type="BSBScope" version="2">
+ <bsbObject version="2" type="BSBScope">
   <objectName/>
   <x>85</x>
   <y>316</y>
@@ -281,7 +315,7 @@ endin
   <dispy>1.00000000</dispy>
   <mode>0.00000000</mode>
  </bsbObject>
- <bsbObject type="BSBVSlider" version="2">
+ <bsbObject version="2" type="BSBVSlider">
   <objectName>volume</objectName>
   <x>57</x>
   <y>6</y>
@@ -293,13 +327,13 @@ endin
   <midicc>1</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.42000000</value>
+  <value>1.00000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>38</x>
   <y>108</y>
@@ -328,7 +362,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>34</x>
   <y>152</y>
@@ -357,7 +391,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBVSlider" version="2">
+ <bsbObject version="2" type="BSBVSlider">
   <objectName>feedback</objectName>
   <x>221</x>
   <y>8</y>
@@ -375,7 +409,7 @@ endin
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>193</x>
   <y>111</y>
@@ -404,10 +438,10 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
-  <x>30</x>
-  <y>195</y>
+  <x>25</x>
+  <y>198</y>
   <width>80</width>
   <height>25</height>
   <uuid>{d54a424c-8141-44dd-a4d1-6862c9a567a8}</uuid>
@@ -433,7 +467,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBHSlider" version="2">
+ <bsbObject version="2" type="BSBHSlider">
   <objectName>noise0</objectName>
   <x>122</x>
   <y>197</y>
@@ -445,17 +479,111 @@ endin
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
+  <value>0.02325581</value>
+  <mode>lin</mode>
+  <mouseControl act="jump">continuous</mouseControl>
+  <resolution>-1.00000000</resolution>
+  <randomizable group="0">false</randomizable>
+ </bsbObject>
+ <bsbObject version="2" type="BSBHSlider">
+  <objectName>pan0</objectName>
+  <x>124</x>
+  <y>230</y>
+  <width>134</width>
+  <height>32</height>
+  <uuid>{07624fa9-14e5-43b6-a724-823a5bccd1ee}</uuid>
+  <visible>true</visible>
+  <midichan>0</midichan>
+  <midicc>0</midicc>
+  <minimum>0.00000000</minimum>
+  <maximum>1.00000000</maximum>
+  <value>0.56716418</value>
+  <mode>lin</mode>
+  <mouseControl act="jump">continuous</mouseControl>
+  <resolution>-1.00000000</resolution>
+  <randomizable group="0">false</randomizable>
+ </bsbObject>
+ <bsbObject version="2" type="BSBHSlider">
+  <objectName>vibrato0</objectName>
+  <x>124</x>
+  <y>264</y>
+  <width>134</width>
+  <height>32</height>
+  <uuid>{b8f8f68b-60a0-46a9-96fc-4cf09c5001f5}</uuid>
+  <visible>true</visible>
+  <midichan>0</midichan>
+  <midicc>0</midicc>
+  <minimum>0.00000000</minimum>
+  <maximum>1.00000000</maximum>
   <value>0.00000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
+ <bsbObject version="2" type="BSBLabel">
+  <objectName/>
+  <x>27</x>
+  <y>235</y>
+  <width>80</width>
+  <height>25</height>
+  <uuid>{21eb17d1-916e-4014-a463-0ed1c3bd0f9d}</uuid>
+  <visible>true</visible>
+  <midichan>0</midichan>
+  <midicc>0</midicc>
+  <label>pan0</label>
+  <alignment>left</alignment>
+  <font>Arial</font>
+  <fontsize>10</fontsize>
+  <precision>3</precision>
+  <color>
+   <r>0</r>
+   <g>0</g>
+   <b>0</b>
+  </color>
+  <bgcolor mode="nobackground">
+   <r>255</r>
+   <g>255</g>
+   <b>255</b>
+  </bgcolor>
+  <bordermode>noborder</bordermode>
+  <borderradius>1</borderradius>
+  <borderwidth>1</borderwidth>
+ </bsbObject>
+ <bsbObject version="2" type="BSBLabel">
+  <objectName/>
+  <x>29</x>
+  <y>272</y>
+  <width>80</width>
+  <height>25</height>
+  <uuid>{8a8d39c6-b0af-4208-b101-dbb34bc13ae7}</uuid>
+  <visible>true</visible>
+  <midichan>0</midichan>
+  <midicc>0</midicc>
+  <label>vibrato0</label>
+  <alignment>left</alignment>
+  <font>Arial</font>
+  <fontsize>10</fontsize>
+  <precision>3</precision>
+  <color>
+   <r>0</r>
+   <g>0</g>
+   <b>0</b>
+  </color>
+  <bgcolor mode="nobackground">
+   <r>255</r>
+   <g>255</g>
+   <b>255</b>
+  </bgcolor>
+  <bordermode>noborder</bordermode>
+  <borderradius>1</borderradius>
+  <borderwidth>1</borderwidth>
+ </bsbObject>
 </bsbPanel>
 <bsbPresets>
 </bsbPresets>
-<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="254" width="655" height="346" visible="false" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
-i 10 0 4 0 320 0.2 
-i 10 0 1 0 415 0.3 
-i 10 0 2 0 440 0.7 
-i 10 0 2 0 280 0.8 </EventPanel>
+<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="254" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
+i 10 0 4 0 320 0.5 
+i 10 0 1 0 415 0.9 
+i 10 0 2 0 440 0.2 
+i 10 0 2 0 280 .1 </EventPanel>

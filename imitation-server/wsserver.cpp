@@ -4,6 +4,9 @@
 #include <QtCore/QDebug>
 #include <QDir>
 
+//TEST for sending OSC
+#include <lo/lo.h>
+
 
 QT_USE_NAMESPACE
 
@@ -30,6 +33,9 @@ WsServer::WsServer(quint16 port, QObject *parent) :
 	udpSocket->bind(QHostAddress::Any, port+1);
 	qDebug()<<"Listening for UDP messages on port "<<port+1;
 	connect(udpSocket, SIGNAL(readyRead()), this, SLOT(readUdp()));
+
+	//TEST
+	target = lo_address_new("localhost", "8008") ;
 }
 
 
@@ -58,9 +64,11 @@ void WsServer::readUdp()
 	if (message[0]==NOTEON) {
 		QString command;
 		float instrno = FLUTEISNTRUMENT+(player+1)/100.0; // player+1 since first player would be .0
-		command.sprintf("i %.2f 0 %d %d", instrno, -1,player ) ;
+		command.sprintf("i %.2f 0 -1 %d", instrno, player ) ;
 		qDebug()<<"NOTEON: "<<command;
 		cs->csEvent(command);
+
+		lo_send(target, "/event", "iif", NOTEON,player, instrno);
 	}
 	else if (message[0]==NOTEOFF) {
 		QString command;
@@ -69,11 +77,17 @@ void WsServer::readUdp()
 		qDebug()<<"NOTEOFF: "<<command;
 		cs->csEvent(command);
 
+		lo_send(target, "/event", "iif", NOTEOFF,player, instrno); // since csEvent has sometimes lag
 	}
 
 	else if (message[0]==NEWSTEP) {
 		qDebug()<<"Player "<<player<<", nw step: "<<(MYFLT)message[1];
 		cs->setChannel("step"+QString::number(player),(MYFLT)message[1]);
+	}
+	else if (message[0]==NEWNOISE) {
+		MYFLT noiseLevel = (MYFLT)message[1]/message[2]; // convert to 0..1; array sent as NEWNOISE, noiselevel, MAXLEVEL
+		qDebug()<<"Player "<<player<<", nw noisevel: "<<noiseLevel;
+		cs->setChannel("noise"+QString::number(player),noiseLevel);
 	}
 	else if (message[0]==NEWNOISE) {
 		MYFLT noiseLevel = (MYFLT)message[1]/message[2]; // convert to 0..1; array sent as NEWNOISE, noiselevel, MAXLEVEL
@@ -109,9 +123,6 @@ void WsServer::processTextMessage(QString message)
 
 	QStringList messageParts = message.split(",");
 
-//	if (messageParts[0]=="pause")
-//		setPause();
-
 }
 
 
@@ -133,26 +144,39 @@ void WsServer::processBinaryMessage(QByteArray message)
 		if (message[0]==NOTEON) {
 			QString command;
 			float instrno = FLUTEISNTRUMENT+(player+1)/100.0; // player+1 since first player would be .0
+			// float pan = message[1]/100.0; // pan from channel
 			command.sprintf("i %.2f 0 %d %d", instrno, -1,player ) ;
 			qDebug()<<"NOTEON: "<<command;
-			cs->csEvent(command);
+			//cs->csEvent(command); // lag!
+			lo_send(target, "/event", "iif", NOTEON,player, instrno); // since csEvent has sometimes lag
 		}
 		else if (message[0]==NOTEOFF) {
 			QString command;
 			float instrno = -(FLUTEISNTRUMENT+(player+1)/100.0); // player+1 since first player would be .0
 			command.sprintf("i %.2f 0 0.1", instrno) ;
 			qDebug()<<"NOTEOFF: "<<command;
-			cs->csEvent(command);
+			//cs->csEvent(command); // lag!
+			lo_send(target, "/event", "iif", NOTEOFF,player, instrno); // since csEvent has sometimes lag
 		}
 
 		else if (message[0]==NEWSTEP) {
-			qDebug()<<"Player "<<player<<", nw step: "<<(MYFLT)message[1];
+			qDebug()<<"Player "<<player<<", new step: "<<(MYFLT)message[1];
 			cs->setChannel("step"+QString::number(player),(MYFLT)message[1]);
 		}
 		else if (message[0]==NEWNOISE) {
 			MYFLT noiseLevel = (MYFLT)message[1]/message[2]; // convert to 0..1; array sent as NEWNOISE, noiselevel, MAXLEVEL
-			qDebug()<<"Player "<<player<<", nw noisevel: "<<noiseLevel;
+			qDebug()<<"Player "<<player<<", new noisevel: "<<noiseLevel;
 			cs->setChannel("noise"+QString::number(player),noiseLevel);
+		}
+		else if (message[0]==NEWVIBRATO) {
+			MYFLT vibrato = (MYFLT)message[1]/10; // vibrato sent as 0..10
+			qDebug()<<"Player "<<player<<", new vibrato level: "<<vibrato;
+			cs->setChannel("vibrato"+QString::number(player),vibrato);
+		}
+		else if (message[0]==NEWPAN) {
+			MYFLT pan = (MYFLT)message[1]/10; // pan sent as 0..10
+			qDebug()<<"Player "<<player<<", new pan: "<<pan;
+			cs->setChannel("pan"+QString::number(player),pan);
 		}
 
 	}
