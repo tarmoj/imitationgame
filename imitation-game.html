@@ -184,7 +184,7 @@
 	function sendNote(note) {}
 	
 	function tester() { 
-		var player = 20+Math.floor(Math.random()*100);
+		var player = 20+Math.floor(Math.random()*79);
 		var interval = 100 ; // in millisconds
 		doSendArray(new Int8Array([NOTEON,100,player])); // 100 tells that this is a test call, don't care about callers IP in the srver
 		 var channelTester = setInterval(function(){
@@ -195,11 +195,11 @@
 			 doSendArray(new Int8Array([NEWNOISE,randomNoise,10,100,player]));
 			 doSendArray(new Int8Array([NEWPAN,randomPan,100,player]));
 			 
-		}, 500);
+		}, interval);
 
 		setTimeout(function(){ 
 			clearInterval(channelTester);
-			doSendArray(new Int8Array([NOTEOFF,100,player])); },1000+Math.random()*5000);
+			doSendArray(new Int8Array([NOTEOFF,100,player])); },1000+Math.random()*8000);
 
 		
 	}
