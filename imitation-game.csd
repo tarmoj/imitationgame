@@ -15,7 +15,7 @@
 ; internetis vaata: http://www.eumus.edu.uy/eme/ensenanza/electivas/csound/materiales/book_chapters/19mathmodels/19math_models.htm
 
 sr        =         44100
-ksmps     =         32
+ksmps     =         16 ; changes pitch; keep it 16
 nchnls    =         2
 0dbfs = 1
 
@@ -110,16 +110,16 @@ schedule 10,  0,     1,   0, 0,0.5
 instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE 
 
 	; INIT----------------------
-	ifqc      =  (p5==0) ?        cpspch(8.00) : p5; flutes's lowest notes by default OR p5, if given
+	ifqc      =  (p5==0) ?        cpspch(8.00) : p5; ; good was 7.05 flutes's lowest notes by default OR p5, if given
 	print ifqc
 	; constants
 	ipress    =         0.9
 	;ibreath   =         0.01;0.036 ; TODO: from channel
-	ifeedbk1  =         0.45
-	ifeedbk2  =         0.4
+	ifeedbk1  =         0.43
+	ifeedbk2  =         0.43
 	iplayer = p4 ; to know from which step and noise channel to read	
 	iamp = 0.1
-	ipan = (p6==0) ? 0.5 : p6
+	;ipan = (p6==0) ? 0.5 : p6
 	
 	; changing values from channels	----------------
 	; get pitch by step - it can be changed via channel value
@@ -141,19 +141,19 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	kfreq init ifqc
 	if (p5==0) then ; if freq was given, use that
 		kfreq = ifqc*gkSteps[kstep]
-		kfreq port kfreq, 0.02,ifqc
+		kfreq port kfreq, 0.03,ifqc
 	endif
 	
 	; FLOW SETUP ---------------------------- 
 	aflute1 init 0 ; the bore sound
 	aenv1     linsegr    0, .06, 1.1*ipress, .2, ipress, .5, 0 ; blow envelope ;?? maybe more than 0.2	; rise was 0.06
 	aenv2     linenr   1, .01, .2, 0.001 ; declick, basically	
-	kenvibr   linsegr    0, .8, 0, .5, 1, 0.1, 1 ; VIBRATO ENVELOPE - start after 0.5 seconds
+	kenvibr   linsegr    0, .5, 0, .5, 1, 0.1, 1 ; VIBRATO ENVELOPE - start after 0.5 seconds
 	
 	; THE VALUES MUST BE APPROXIMATELY -1 TO 1 OR THE CUBIC WILL BLOW UP
 	aflow1    rand      aenv1 ; noise
 	avibr init 0
-	avibr   poscil     .05*kenvibr*kvibratoLevel, 2+kvibratoLevel*4
+	avibr   poscil     .06*kenvibr*kvibratoLevel, 2+kvibratoLevel*4
 	
 	; ibreath CAN BE USED TO ADJUST THE NOISE LEVEL
 	asum1     =         knoiseLevel *aflow1 + aenv1 + avibr 
@@ -161,7 +161,7 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	
 	
 	
-	afqc      =         1/kfreq  - asum1/20000 -9/sr + kfreq/12000000 ; 	
+	afqc      =      1/kfreq  - asum1/5000 -9/sr + kfreq/12000000  ; 1/kfreq  - asum1/20000 -9/sr + kfreq/12000000 ; 	the correction found empirically
 	
 	; EMBOUCHURE DELAY SHOULD BE 1/2 THE BORE DELAY ---------
 	atemp1    delayr    1/ifqc/2	
@@ -183,11 +183,17 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	
 	;output is from instr bore
 	aout = avalue*iamp*aenv2
-	aout clip aout, 0, 0dbfs*0.95
+	aout clip aout, 0, 0dbfs*0.95  ; for any case
   	aL,aR pan2 aout, kpan
   	gaL += aL
   	gaR += aR
     ;outs       aout, aout
+    
+    ; pitch test - to find correct value for afc
+;    apitch, aloc plltrack aout, 0.3
+;    kpitch downsamp apitch
+;    outvalue "pitch", kpitch
+    
 
 endin
 
@@ -250,6 +256,7 @@ endin
 
 
 
+
 <bsbPanel>
  <label>Widgets</label>
  <objectName/>
@@ -264,7 +271,7 @@ endin
   <g>255</g>
   <b>255</b>
  </bgcolor>
- <bsbObject version="2" type="BSBScrollNumber">
+ <bsbObject type="BSBScrollNumber" version="2">
   <objectName>step0</objectName>
   <x>119</x>
   <y>153</y>
@@ -297,7 +304,7 @@ endin
   <randomizable group="0">false</randomizable>
   <mouseControl act=""/>
  </bsbObject>
- <bsbObject version="2" type="BSBScope">
+ <bsbObject type="BSBScope" version="2">
   <objectName/>
   <x>85</x>
   <y>316</y>
@@ -315,7 +322,7 @@ endin
   <dispy>1.00000000</dispy>
   <mode>0.00000000</mode>
  </bsbObject>
- <bsbObject version="2" type="BSBVSlider">
+ <bsbObject type="BSBVSlider" version="2">
   <objectName>volume</objectName>
   <x>57</x>
   <y>6</y>
@@ -327,13 +334,13 @@ endin
   <midicc>1</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>1.00000000</value>
+  <value>0.60000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject version="2" type="BSBLabel">
+ <bsbObject type="BSBLabel" version="2">
   <objectName/>
   <x>38</x>
   <y>108</y>
@@ -362,7 +369,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject version="2" type="BSBLabel">
+ <bsbObject type="BSBLabel" version="2">
   <objectName/>
   <x>34</x>
   <y>152</y>
@@ -391,7 +398,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject version="2" type="BSBVSlider">
+ <bsbObject type="BSBVSlider" version="2">
   <objectName>feedback</objectName>
   <x>221</x>
   <y>8</y>
@@ -409,7 +416,7 @@ endin
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject version="2" type="BSBLabel">
+ <bsbObject type="BSBLabel" version="2">
   <objectName/>
   <x>193</x>
   <y>111</y>
@@ -438,7 +445,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject version="2" type="BSBLabel">
+ <bsbObject type="BSBLabel" version="2">
   <objectName/>
   <x>25</x>
   <y>198</y>
@@ -467,7 +474,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject version="2" type="BSBHSlider">
+ <bsbObject type="BSBHSlider" version="2">
   <objectName>noise0</objectName>
   <x>122</x>
   <y>197</y>
@@ -479,13 +486,13 @@ endin
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.02325581</value>
+  <value>0.00000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject version="2" type="BSBHSlider">
+ <bsbObject type="BSBHSlider" version="2">
   <objectName>pan0</objectName>
   <x>124</x>
   <y>230</y>
@@ -497,13 +504,13 @@ endin
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.56716418</value>
+  <value>0.52238806</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject version="2" type="BSBHSlider">
+ <bsbObject type="BSBHSlider" version="2">
   <objectName>vibrato0</objectName>
   <x>124</x>
   <y>264</y>
@@ -515,13 +522,13 @@ endin
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.00000000</value>
+  <value>1.00000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject version="2" type="BSBLabel">
+ <bsbObject type="BSBLabel" version="2">
   <objectName/>
   <x>27</x>
   <y>235</y>
@@ -550,7 +557,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject version="2" type="BSBLabel">
+ <bsbObject type="BSBLabel" version="2">
   <objectName/>
   <x>29</x>
   <y>272</y>
@@ -579,11 +586,40 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
+ <bsbObject type="BSBDisplay" version="2">
+  <objectName>pitch</objectName>
+  <x>96</x>
+  <y>549</y>
+  <width>80</width>
+  <height>25</height>
+  <uuid>{dca42d32-7896-4c0d-8083-0dba96ffc6f3}</uuid>
+  <visible>true</visible>
+  <midichan>0</midichan>
+  <midicc>0</midicc>
+  <label>0.000</label>
+  <alignment>left</alignment>
+  <font>Arial</font>
+  <fontsize>10</fontsize>
+  <precision>3</precision>
+  <color>
+   <r>0</r>
+   <g>0</g>
+   <b>0</b>
+  </color>
+  <bgcolor mode="nobackground">
+   <r>255</r>
+   <g>255</g>
+   <b>255</b>
+  </bgcolor>
+  <bordermode>border</bordermode>
+  <borderradius>1</borderradius>
+  <borderwidth>1</borderwidth>
+ </bsbObject>
 </bsbPanel>
 <bsbPresets>
 </bsbPresets>
-<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="254" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
-i 10 0 4 0 320 0.5 
-i 10 0 1 0 415 0.9 
-i 10 0 2 0 440 0.2 
-i 10 0 2 0 280 .1 </EventPanel>
+<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="159" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
+i 10 0 30 0 0 0 
+i 10 0 1 0 300 0.9 
+i 10 0 2 0 400 0.2 
+i 10 0 2 0 600 .1 </EventPanel>
