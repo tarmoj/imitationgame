@@ -121,8 +121,7 @@
 			pointer.startDrag();
 			pointer.show();
 			setNoteAndNoise();	// set the levels and make server set channel values firstparseInt
-			console.log("Pan: ", document.myform.pan.value);
-			doSendArray(new Int8Array([NOTEON, parseInt(document.myform.pan.value) ])); // send pan with NOTEON
+			doSendArray(new Int8Array([NOTEON])); // send pan with NOTEON
 			
 		});
 		
@@ -138,22 +137,18 @@
  		//console.log(mess_array[0]); 		
 	}
 
-	function newVibrato(value) {
-		if (value!=Vibrato) {
-		}
-	}
 	
   
   // UI functions --------------------------------------------------------
 		
 	
-	function tester() { // not implemented
+	// messages to Ws server
+	 
+	function startNote() {
+		playing = true;
+		//setNoteAndNoise();	// set the levels and make server set channel values first
 		
-		doSend("something");
-
-		setTimeout(function(){ tester()},500+Math.random()*3000);
-
-		
+		doSendArray(new Int8Array([NOTEON])); // send pan with NOTEON
 	}
 	
 	function stopNote() {
@@ -166,10 +161,7 @@
 		}
 	}
 	
-	document.addEventListener('mouseup', stopNote, false );
-	document.addEventListener('touchend', stopNote, false );
 	
-	window.onresize = drawEverything;
 	
 	function newVibrato(value) { // value is 0.100, vibrato 0..10
 		value = Math.floor(parseInt(value)/10);
@@ -188,6 +180,35 @@
 			doSendArray(new Int8Array([NEWPAN,pan]));
 		}
 	}
+	
+	function sendNote(note) {}
+	
+	function tester() { 
+		var player = 20+Math.floor(Math.random()*100);
+		var interval = 100 ; // in millisconds
+		doSendArray(new Int8Array([NOTEON,100,player])); // 100 tells that this is a test call, don't care about callers IP in the srver
+		 var channelTester = setInterval(function(){
+			 var randomStep = Math.floor(Math.random()*11);
+			 var randomNoise = Math.floor(Math.random()*10);
+			 var randomPan = Math.floor(Math.random()*10);
+			 doSendArray(new Int8Array([NEWSTEP,randomStep,100,player]));
+			 doSendArray(new Int8Array([NEWNOISE,randomNoise,10,100,player]));
+			 doSendArray(new Int8Array([NEWPAN,randomPan,100,player]));
+			 
+		}, 500);
+
+		setTimeout(function(){ 
+			clearInterval(channelTester);
+			doSendArray(new Int8Array([NOTEOFF,100,player])); },1000+Math.random()*5000);
+
+		
+	}
+	
+	document.addEventListener('mouseup', stopNote, false );
+	document.addEventListener('touchend', stopNote, false );
+	
+	window.onresize = drawEverything;
+	
 	
 	window.onload = function(){
 		doConnect(); // init websocket on start; suppose the server is ready
@@ -214,14 +235,14 @@
     <br>
 
      
-   Panning (taken only on the note start ): <i>Left</i> <input type="range" class="range" id="pan" min=0 max=100 step=1 value=50 oninput="newPan(this.value)" > <i>Right</i> <br><br>
+   Panning: <i>Left</i> <input type="range" class="range" id="pan" min=0 max=100 step=1 value=50 oninput="newPan(this.value)" > <i>Right</i> <br><br>
    Vibrato amplitude: <i>none</i> <input type="range" class="range" id="vibrato" min=0 max=100 step=1 value=50 oninput='newVibrato(this.value)'> <i>max</i> <br><br>
 	
    <div id="container"></div>
     
    
     
-    Server address: <input value="ws://192.168.1.220:22022/ws" id="url" type="text"><br>
+    Server address: <input value="ws://localhost:22022/ws" id="url" type="text"><br>
     <button type="button" id="connectButton" onclick="doConnect();">Connect</button>
     <!--<button type="button" id="disconnectButton">Disonnect</button>-->
     <br>

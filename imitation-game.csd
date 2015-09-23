@@ -118,8 +118,14 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	ifeedbk1  =         0.43
 	ifeedbk2  =         0.43
 	iplayer = p4 ; to know from which step and noise channel to read	
-	iamp = 0.1
+	iamp = 0.2
 	;ipan = (p6==0) ? 0.5 : p6
+	
+	; if not low note, do not allow to play too long
+	if (timeinsts()>10 && iplayer<1000) then
+		turnoff 
+	endif
+	
 	
 	; changing values from channels	----------------
 	; get pitch by step - it can be changed via channel value
@@ -155,8 +161,13 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	avibr init 0
 	avibr   poscil     .06*kenvibr*kvibratoLevel, 2+kvibratoLevel*4
 	
-	; ibreath CAN BE USED TO ADJUST THE NOISE LEVEL
+	; knoiseLevelCAN BE USED TO ADJUST THE NOISE LEVEL
+	; try with bandpass for noise?
+	;aflow1 butterbp aflow1, kfreq,kfreq*0.75
 	asum1     =         knoiseLevel *aflow1 + aenv1 + avibr 
+	
+
+	
 	asum2     =         asum1 + aflute1*ifeedbk1 ; noise + feedback sound from bore 
 	
 	
@@ -184,6 +195,9 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	;output is from instr bore
 	aout = avalue*iamp*aenv2
 	aout clip aout, 0, 0dbfs*0.95  ; for any case
+	if iplayer = 1000 then ; filter higher harmonics from low flutes
+		aout butterlp aout*8, 4*ifqc ; cut higher overtones on low notes, make it s bit louder
+  	endif
   	aL,aR pan2 aout, kpan
   	gaL += aL
   	gaR += aR
@@ -317,7 +331,7 @@ endin
   <value>-255.00000000</value>
   <type>scope</type>
   <zoomx>2.00000000</zoomx>
-  <zoomy>2.00000000</zoomy>
+  <zoomy>4.00000000</zoomy>
   <dispx>1.00000000</dispx>
   <dispy>1.00000000</dispy>
   <mode>0.00000000</mode>
@@ -486,7 +500,7 @@ endin
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.00000000</value>
+  <value>1.00000000</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
@@ -522,7 +536,7 @@ endin
   <midicc>0</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>1.00000000</value>
+  <value>0.31343284</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
@@ -618,7 +632,7 @@ endin
 </bsbPanel>
 <bsbPresets>
 </bsbPresets>
-<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1261" y="159" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 0 10 0 
+<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1251" y="295" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 1000 16 0 
 i 10 0 30 0 0 0 
 i 10 0 1 0 300 0.9 
 i 10 0 2 0 400 0.2 

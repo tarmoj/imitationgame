@@ -143,7 +143,11 @@ void WsServer::processBinaryMessage(QByteArray message)
 		int player = peerAdresses.indexOf(senderAddress);
 		if (message[0]==NOTEON) {
 			QString command;
+			if (message.length()>2 && message[1]==100) { // test call, take player from array
+				player = message[2];
+			}
 			float instrno = FLUTEISNTRUMENT+(player+1)/100.0; // player+1 since first player would be .0
+
 			// float pan = message[1]/100.0; // pan from channel
 			command.sprintf("i %.2f 0 %d %d", instrno, -1,player ) ;
 			qDebug()<<"NOTEON: "<<command;
@@ -151,6 +155,9 @@ void WsServer::processBinaryMessage(QByteArray message)
 			lo_send(target, "/event", "iif", NOTEON,player, instrno); // since csEvent has sometimes lag
 		}
 		else if (message[0]==NOTEOFF) {
+			if (message.length()>2 && message[1]==100) { // test call, take player from array
+				player = message[2];
+			}
 			QString command;
 			float instrno = -(FLUTEISNTRUMENT+(player+1)/100.0); // player+1 since first player would be .0
 			command.sprintf("i %.2f 0 0.1", instrno) ;
@@ -160,10 +167,16 @@ void WsServer::processBinaryMessage(QByteArray message)
 		}
 
 		else if (message[0]==NEWSTEP) {
+			if (message.length()>3 && message[2]==100) { // test call, take player from array
+				player = message[3];
+			}
 			qDebug()<<"Player "<<player<<", new step: "<<(MYFLT)message[1];
 			cs->setChannel("step"+QString::number(player),(MYFLT)message[1]);
 		}
 		else if (message[0]==NEWNOISE) {
+			if (message.length()>4 && message[3]==100) { // test call, take player from array
+				player = message[4];
+			}
 			MYFLT noiseLevel = (MYFLT)message[1]/message[2]; // convert to 0..1; array sent as NEWNOISE, noiselevel, MAXLEVEL
 			qDebug()<<"Player "<<player<<", new noisevel: "<<noiseLevel;
 			cs->setChannel("noise"+QString::number(player),noiseLevel);
@@ -174,6 +187,9 @@ void WsServer::processBinaryMessage(QByteArray message)
 			cs->setChannel("vibrato"+QString::number(player),vibrato);
 		}
 		else if (message[0]==NEWPAN) {
+			if (message.length()>3 && message[2]==100) { // test call, take player from array
+				player = message[3];
+			}
 			MYFLT pan = (MYFLT)message[1]/10; // pan sent as 0..10
 			qDebug()<<"Player "<<player<<", new pan: "<<pan;
 			cs->setChannel("pan"+QString::number(player),pan);
