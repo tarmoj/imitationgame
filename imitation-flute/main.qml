@@ -12,13 +12,20 @@ ApplicationWindow {
     height: 480
     visible: true
 
-    TiltSensor {
+    TiltSensor { //TODO: add a checkbox : use tilt sensor for pan and vibrato -  checked
         id:tilt
         active:true
 
         onReadingChanged: { // TODO: sea ainult siis kui muutus on teatud määrast suurem
-            panSlider.value = -reading.xRotation+50
-            vibratoSlider.value = Math.abs(reading.yRotation*2)
+            var convert2pan = reading.xRotation+50
+            convert2pan = Math.max(panSlider.minimumValue ,Math.min(convert2pan,panSlider.maximumValue )) // limit to 0..100
+            if (Math.abs(convert2pan-panSlider.value) > 5 )
+                panSlider.value = convert2pan
+
+            var convert2vibrato = Math.abs(reading.yRotation*2)
+            convert2vibrato = Math.max(vibratoSlider.minimumValue ,Math.min(convert2vibrato,vibratoSlider.maximumValue )) // limit to 0..100
+            if (Math.abs(convert2vibrato-vibratoSlider.value) > 10 )
+                vibratoSlider.value = convert2vibrato
         }
     }
 
@@ -151,78 +158,76 @@ ApplicationWindow {
             }
         }
 
-        Label { // SEE PIIRKOND EI NÄE HEA VÄLJA!
-            text: qsTr("Pan (Left<->Right)")
-            color: "#cdf505"
-            anchors.right: panSlider.left
-            anchors.rightMargin: 10
-            anchors.bottom: panSlider.bottom
-        }
-
-        Slider {
-            id: panSlider
+        Row {
+            id: sliderRow
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: controllerRect.top
             anchors.bottomMargin: 10
-            maximumValue: 100
-            width: controllerRect.width/3
-            stepSize: 1
-            value: 50
-            property int pan: -1
+            spacing: 8
 
-            onValueChanged: {
-                var currentPan = Math.floor(value/10); // to send values only if change is big enough
-                        if (currentPan != pan) {
-                            pan = currentPan;
-                            console.log("New pan: ", pan);
-                            //doSendArray(new Int8Array([NEWPAN,pan]));
-                            var sendString = JS.NEWPAN.toString() + "," + pan.toString()
-                            console.log(sendString);
-                            if (socket.status == WebSocket.Open)
-                                socket.sendTextMessage(sendString); // to be convertet in server
-                        }
+            Label {
+                text: qsTr("Pan (Left<->Right): ")
+                color: "#cdf505"
+            }
+
+            Slider {
+                id: panSlider
+                width: 150
+                maximumValue: 100
+                stepSize: 1
+                value: 50
+                property int pan: -1
+
+                onValueChanged: {
+                    var currentPan = Math.floor(value/10); // to send values only if change is big enough
+                    if (currentPan != pan) {
+                        pan = currentPan;
+                        console.log("New pan: ", pan);
+                        //doSendArray(new Int8Array([NEWPAN,pan]));
+                        var sendString = JS.NEWPAN.toString() + "," + pan.toString()
+                        console.log(sendString);
+                        if (socket.status == WebSocket.Open)
+                            socket.sendTextMessage(sendString); // to be convertet in server
+                    }
+
+                }
+
 
             }
 
-
-        }
-
-        Label {
-            text: qsTr("Vibrato")
-            color: "#cdf505"
-            anchors.left: mainRect.left
-            anchors.leftMargin: 10
-            anchors.bottomMargin: 10
-            anchors.bottom: vibratoSlider.top
-        }
-
-        Slider {
-            id: vibratoSlider
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: mainRect.left
-            anchors.leftMargin: 10
-            orientation: Qt.Vertical
-            height: controllerRect.height *1.2
-            maximumValue: 100
-            stepSize: 1
-            value: 0
-            property int vibrato: -1
-
-            onValueChanged: {
-                var currentV = Math.floor(value/10); // to send values only if change is big enough
-                        if (currentV != vibrato) {
-                            vibrato = currentV;
-                            console.log("New vibrato: ", vibrato);
-                            var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
-                            console.log(sendString);
-                            if (socket.status == WebSocket.Open)
-                                socket.sendTextMessage(sendString); // to be convertet in server
-                        }
+            Label {
+                text: qsTr("Vibrato: ")
+                color: "#cdf505"
 
             }
 
+            Slider {
+                id: vibratoSlider
+                width: 150
+                maximumValue: 100
+                stepSize: 1
+                value: 0
+                property int vibrato: -1
+
+                onValueChanged: {
+                    var currentV = Math.floor(value/10); // to send values only if change is big enough
+                    if (currentV != vibrato) {
+                        vibrato = currentV;
+                        console.log("New vibrato: ", vibrato);
+                        var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
+                        //console.log(sendString);
+                        if (socket.status == WebSocket.Open)
+                            socket.sendTextMessage(sendString); // to be convertet in server
+                    }
+
+                }
+
+
+            }
 
         }
+
+
 
         Item {
             id: controllerRect
