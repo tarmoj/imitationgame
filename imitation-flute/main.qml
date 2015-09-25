@@ -3,6 +3,7 @@ import QtQuick.Controls 1.3
 import QtQuick.Window 2.2
 import QtQuick.Dialogs 1.2
 import Qt.WebSockets 1.0
+import QtSensors 5.0
 import "js-functions.js" as JS
 
 ApplicationWindow {
@@ -11,8 +12,18 @@ ApplicationWindow {
     height: 480
     visible: true
 
+    TiltSensor {
+        id:tilt
+        active:true
+
+        onReadingChanged: { // TODO: sea ainult siis kui muutus on teatud määrast suurem
+            panSlider.value = -reading.xRotation+50
+            vibratoSlider.value = Math.abs(reading.yRotation*2)
+        }
+    }
+
     function setNote(x) {
-        x = (x>=controllerRect.width-1) ? controllerRect.width-1 : x;
+        x = (x<=1) ? 1 : x ; // to avoid getting index 12 //(x>=controllerRect.width-1) ? controllerRect.width-1 : x;
         var noteStep = controllerRect.width/JS.notes;
         var noteHere = Math.floor((controllerRect.width - x) / noteStep);
         if (JS.note != noteHere) { // check if note has changed
@@ -66,6 +77,7 @@ ApplicationWindow {
 
     Component.onCompleted: {
         socket.active = true;
+        console.log("TILT: ", tilt.outputRanges)
     }
 
     //Component.onCompleted: udpSender.setHostAddress("192.168.1.220")
@@ -117,7 +129,7 @@ ApplicationWindow {
             TextField {
                 id: serverAddress
                 width: 200
-                text: "ws://localhost:22022/ws"
+                text: "ws://192.168.1.220:22022/ws"
             }
 
             Button {
@@ -131,12 +143,20 @@ ApplicationWindow {
             }
         }
 
+        Label {
+            text: qsTr("Pan:")
+            anchors.right: panSlider.left
+            anchors.rightMargin: 10
+            anchors.bottom: panSlider.bottom
+        }
+
         Slider {
             id: panSlider
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: controllerRect.top
             anchors.bottomMargin: 10
             maximumValue: 100
+            width: controllerRect.width/3
             stepSize: 1
             value: 50
             property int pan: -1
@@ -164,7 +184,7 @@ ApplicationWindow {
             anchors.left: controllerRect.right
             anchors.leftMargin: 10
             orientation: Qt.Vertical
-            height: controllerRect.height
+            height: controllerRect.height *1.2
             maximumValue: 100
             stepSize: 1
             value: 50
@@ -236,7 +256,7 @@ ApplicationWindow {
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
                     if (socket.status == WebSocket.Open)
-                        socket.sendTextMessage(JS.NOTEON.toString());
+                        socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
                     JS.note = -1; JS.noiseLevel = -1;
                 }
@@ -260,38 +280,34 @@ ApplicationWindow {
 
 
         }
+
+
+    Row {
+        id:statusRow
+        spacing: 5
+        x: 5
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 5
+
         Label {
             id: noteLabel
-            x: 303
             text: qsTr("note: 0")
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 16
         }
 
         Label {
             id: noiseLabel
-            x: 303
             text: qsTr("noise: 0")
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: noteLabel.bottom
-            anchors.topMargin: 6
+        }
+
+        Label {
+            id: tiltLabel
+            text: qsTr("tilt x: " + Math.floor(tilt.reading.xRotation) + "y: " + Math.floor(tilt.reading.yRotation))
         }
 
 
-//        Label {id: addrLabel; x:10; y:10; text:qsTr("Host address: ")}
-//        TextField {
-//            anchors.top: addrLabel.bottom
-//            anchors.topMargin: 5
-//            x:10
-//            //height: 20; width:120;
-//            text: qsTr("192.168.1.220")
-//            //font.pointSize: 12
-//            onEditingFinished: {
-//                console.log("Editing finished");
-//                udpSender.setHostAddress(text)
-//            }
-//        }
+    }
+
+
     }
 }
 

@@ -113,15 +113,31 @@ void WsServer::onNewConnection()
 
 
 
-void WsServer::processTextMessage(QString message)
+void WsServer::processTextMessage(QString message) // message must be an array of numbers (8bit), separated with colons
 {
     QWebSocket *pClient = qobject_cast<QWebSocket *>(sender());
     if (!pClient) {
         return;
     }
     qDebug()<<message;
-
+	QByteArray data;
+	bool allFine = true;
+	quint8 byte = 0;
 	QStringList messageParts = message.split(",");
+	foreach (QString number, messageParts) {
+		bool ok;
+		byte = (quint8)number.toUShort(&ok);
+		qDebug()<<byte;
+		if (ok)
+			data.append(byte);
+		else {
+			qDebug()<<"Conversion failed!";
+			allFine = false;
+		}
+
+	}
+	if (allFine)
+		processBinaryMessage(data);
 
 }
 
