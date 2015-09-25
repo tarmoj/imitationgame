@@ -21,7 +21,7 @@
 	function drawEverything() {
 		var stage = new Kinetic.Stage({
 				 container: "container",
-				 width:  window.innerWidth *0.8,
+				 width:  Math.min(window.innerWidth *0.8, 800),
 				 height: 250
 			   });
 

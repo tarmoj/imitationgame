@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>js-functions.js</file>
+        <file>flute.png</file>
     </qresource>
 </RCC>

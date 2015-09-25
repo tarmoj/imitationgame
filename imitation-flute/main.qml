@@ -7,7 +7,7 @@ import QtSensors 5.0
 import "js-functions.js" as JS
 
 ApplicationWindow {
-    title: qsTr("Hello World")
+    title: qsTr("Imitation-flute")
     width: 640
     height: 480
     visible: true
@@ -24,15 +24,15 @@ ApplicationWindow {
 
     function setNote(x) {
         x = (x<=1) ? 1 : x ; // to avoid getting index 12 //(x>=controllerRect.width-1) ? controllerRect.width-1 : x;
-        var noteStep = controllerRect.width/JS.notes;
-        var noteHere = Math.floor((controllerRect.width - x) / noteStep);
+        var noteStep = controllerArea.width/JS.notes;
+        var noteHere = Math.floor((controllerArea.width - x) / noteStep);
         if (JS.note != noteHere) { // check if note has changed
             JS.note = noteHere;
             //udpSender.sendNumbersInString(JS.NEWSTEP.toString()+","+JS.note.toString());
             if (socket.status == WebSocket.Open)
                 socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
             console.log("New note:",JS.note);
-            airColumnRect.width = (JS.notes - JS.note)*noteStep;
+            airColumnRect.width = (controllerArea.x -  airColumnRect.x) + (JS.notes - JS.note)*noteStep; // start the air rect from embouchure, controller starts from the keys
             noteLabel.text = qsTr("Note: ")+JS.note.toString();
 
         }
@@ -77,24 +77,23 @@ ApplicationWindow {
 
     Component.onCompleted: {
         socket.active = true;
-        console.log("TILT: ", tilt.outputRanges)
     }
 
     //Component.onCompleted: udpSender.setHostAddress("192.168.1.220")
 
-    menuBar: MenuBar {
-        Menu {
-            title: qsTr("&Options")
-            MenuItem {
-                text: qsTr("&Host")
-                onTriggered: messageDialog.show(qsTr("Open action triggered"));
-            }
-            MenuItem {
-                text: qsTr("E&xit")
-                onTriggered: Qt.quit();
-            }
-        }
-    }
+//    menuBar: MenuBar {
+//        Menu {
+//            title: qsTr("&Options")
+//            MenuItem {
+//                text: qsTr("&Host")
+//                onTriggered: messageDialog.show(qsTr("Open action triggered"));
+//            }
+//            MenuItem {
+//                text: qsTr("E&xit")
+//                onTriggered: Qt.quit();
+//            }
+//        }
+//    }
 
     MessageDialog { // TODO: for info etc
         id: messageDialog
@@ -105,13 +104,22 @@ ApplicationWindow {
         anchors.fill: parent
         gradient: Gradient {
             GradientStop {
-                position: 0
-                color: "#cdf505"
+                position: 0;
+                color: "#cdf505";
             }
 
             GradientStop {
-                position: 1
-                color: "#21221e"
+                position: 0.3;
+                color: "#21221e";
+            }
+
+            GradientStop {
+                position: 0.7;
+                color: "#21221e";
+            }
+            GradientStop {
+                position: 1;
+                color: "#cdf505";
             }
         }
 
@@ -143,8 +151,9 @@ ApplicationWindow {
             }
         }
 
-        Label {
-            text: qsTr("Pan:")
+        Label { // SEE PIIRKOND EI NÄE HEA VÄLJA!
+            text: qsTr("Pan (Left<->Right)")
+            color: "#cdf505"
             anchors.right: panSlider.left
             anchors.rightMargin: 10
             anchors.bottom: panSlider.bottom
@@ -178,16 +187,25 @@ ApplicationWindow {
 
         }
 
+        Label {
+            text: qsTr("Vibrato")
+            color: "#cdf505"
+            anchors.left: mainRect.left
+            anchors.leftMargin: 10
+            anchors.bottomMargin: 10
+            anchors.bottom: vibratoSlider.top
+        }
+
         Slider {
             id: vibratoSlider
             anchors.verticalCenter: parent.verticalCenter
-            anchors.left: controllerRect.right
+            anchors.left: mainRect.left
             anchors.leftMargin: 10
             orientation: Qt.Vertical
             height: controllerRect.height *1.2
             maximumValue: 100
             stepSize: 1
-            value: 50
+            value: 0
             property int vibrato: -1
 
             onValueChanged: {
@@ -206,44 +224,73 @@ ApplicationWindow {
 
         }
 
-        Rectangle {
+        Item {
             id: controllerRect
 
-            width: parent.width*0.8
-            height: 100
+            width: parent.width*0.9
+            height: width/5
 
-            color: "#ffffff"
+            //color: "#ffffff"
             anchors.verticalCenter: parent.verticalCenter
             anchors.horizontalCenter: parent.horizontalCenter
 
-            Rectangle {
-                id:airColumnRect
-                color: "darkred"
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0.00;
-                        color: "#8b0000";
-                    }
-                    GradientStop {
-                        position: 0.63;
-                        color: "#eeb5b5";
-                    }
-                    GradientStop {
-                        position: 1.00;
-                        color: "#ffffff";
-                    }
-                }
-                visible: false
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                height: parent.height/3 ; // TODO: sõltuv puudutuskohast
-                width: JS.noteStep
+            Image {
+                //fillMode: Image.PreserveAspectFit
+                id: fluteImage
+                anchors.bottom: parent.bottom
+                width: parent.width
+                height: width/15
+                source: "flute.png"
+                z:3
 
             }
 
+            Rectangle {
+                id:airColumnRect
+                //color: "darkred"
+                opacity: 1.2-(height/parent.height)
+                gradient: Gradient {
+                    GradientStop {
+                        position: 0.00;
+                        color: "#f5e8e8";
+                    }
+                    GradientStop {
+                        position: 0.57;
+                        color: "#f76666";
+                    }
+                    GradientStop {
+                        position: 1.00;
+                        color: "#ad0707";
+                    }
+                }
+                visible: false
+
+                x: parent.width*0.14 // begin from the headjoint opening
+                anchors.bottom: parent.bottom
+                height: parent.height/3 ; // TODO: sõltuv puudutuskohast
+                width: JS.noteStep
+                z: 2
+
+                Behavior on width {
+                        NumberAnimation { duration: 100 }
+                }
+
+                Behavior on height {
+                        NumberAnimation { duration: 100 }
+                }
+
+            }
+
+
             MouseArea {
                 id: controllerArea
-                anchors.fill: parent
+                width: parent.width*0.6
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                height: parent.height
+                //anchors.fill: parent
+
+//                Rectangle {anchors.fill:parent; color:"blue"; z:1} // test, to make it visible
 
                 onPressed: {
                     setNote(mouseX);
@@ -268,7 +315,7 @@ ApplicationWindow {
                 onMouseYChanged: if (containsPress) {
                                      setNoise(mouseY);
                                      //console.log("Y:",mouseY)
-                                     airColumnRect.height = (this.heigth/2 - mouseY) *2 // does not work...
+                                     airColumnRect.height = Math.max( (this.height - mouseY), fluteImage.height+5) // does not work...
                 }
 
 
