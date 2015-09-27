@@ -35,8 +35,9 @@ void CsEngine::run()
     }
 
 
-	CsoundPerformanceThread perfThread(&cs);
-    perfThread.Play();
+	cs.Start();
+	//CsoundPerformanceThread perfThread(&cs);
+	//perfThread.Play();
 
     // kas siin üldse performance threadi vaja? vt. soundcarpet v CsdPlayerQt
 /*

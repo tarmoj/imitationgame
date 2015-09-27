@@ -1,24 +1,22 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include "udpsender.h"
+#include "csengine.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
 
-	UdpSender udpSender;
-
+	CsEngine cs;
+	cs.start();
     QQmlApplicationEngine engine;
 	//bind object before load
-	engine.rootContext()->setContextProperty("udpSender", &udpSender); // forward c++ object that can be reached form qml by object name "udpSender" NB! include <QQmlContext>
+	engine.rootContext()->setContextProperty("csound", &cs); // forward c++ object that can be reached form qml by object name "csound" NB! include <QQmlContext>
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
 
 	//test
-//	QByteArray data;
-//	data.append(1);data.append(3);
-//	udpSender.sendData(data);
+	//cs.open(":/test.csd");
 
 
     return app.exec();

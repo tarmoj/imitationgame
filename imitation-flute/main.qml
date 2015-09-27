@@ -1,5 +1,6 @@
 import QtQuick 2.4
 import QtQuick.Controls 1.3
+import QtQuick.Controls.Styles 1.2
 import QtQuick.Window 2.2
 import QtQuick.Dialogs 1.2
 import Qt.WebSockets 1.0
@@ -17,6 +18,7 @@ ApplicationWindow {
         active:true
 
         onReadingChanged: { // TODO: sea ainult siis kui muutus on teatud määrast suurem
+            if (tiltCheckBox.checked) {
             var convert2pan = reading.xRotation+50
             convert2pan = Math.max(panSlider.minimumValue ,Math.min(convert2pan,panSlider.maximumValue )) // limit to 0..100
             if (Math.abs(convert2pan-panSlider.value) > 5 )
@@ -26,7 +28,10 @@ ApplicationWindow {
             convert2vibrato = Math.max(vibratoSlider.minimumValue ,Math.min(convert2vibrato,vibratoSlider.maximumValue )) // limit to 0..100
             if (Math.abs(convert2vibrato-vibratoSlider.value) > 10 )
                 vibratoSlider.value = convert2vibrato
-        }
+
+            }
+         }
+
     }
 
     function setNote(x) {
@@ -41,6 +46,8 @@ ApplicationWindow {
             console.log("New note:",JS.note);
             airColumnRect.width = (controllerArea.x -  airColumnRect.x) + (JS.notes - JS.note)*noteStep; // start the air rect from embouchure, controller starts from the keys
             noteLabel.text = qsTr("Note: ")+JS.note.toString();
+            //TEST:
+            csound.compileOrc(" gkValue init " + JS.note/11.0)
 
         }
 
@@ -64,7 +71,7 @@ ApplicationWindow {
 
     WebSocket {
         id: socket
-        url: serverAddress.text //"ws://localhost:22022/ws"
+        url: "ws://localhost:22022/ws"
         onTextMessageReceived: {
            console.log("Received message: ",message);
         }
@@ -86,24 +93,19 @@ ApplicationWindow {
         socket.active = true;
     }
 
-    //Component.onCompleted: udpSender.setHostAddress("192.168.1.220")
 
-//    menuBar: MenuBar {
-//        Menu {
-//            title: qsTr("&Options")
-//            MenuItem {
-//                text: qsTr("&Host")
-//                onTriggered: messageDialog.show(qsTr("Open action triggered"));
-//            }
-//            MenuItem {
-//                text: qsTr("E&xit")
-//                onTriggered: Qt.quit();
-//            }
-//        }
-//    }
 
     MessageDialog { // TODO: for info etc
         id: messageDialog
+        title: qsTr("instructions  - imitation flute")
+            text: qsTr("Touch the flute on its keys to play a note. \n"+
+                       "Lower keys (longer aircolumn) play lower notes.\n"+
+                       "\nIf you move finger or mouse up in the dark control area, the sound will get more noisy.\n"+
+                       "You can control panning (sound to more left or right) and vibrato intensity with tilting the device.\nPanning (x-axis): tilt the left or right side of the phone up or down\nVibrato (y axis): turn the screen from horizontal position to up or down\n" +
+                       "You can swich out the sensor control (uncheck \'Use tilting\') and move thse sliders by hand\n\nThe app send signal about your actions to server that plays the sounds for you. The app does not make any sound itself.")
+            onAccepted: {
+                visible = false
+            }
     }
 
     Rectangle {
@@ -144,7 +146,7 @@ ApplicationWindow {
             TextField {
                 id: serverAddress
                 width: 200
-                text: "ws://192.168.1.220:22022/ws"
+                text: "ws://192.168.1.199:22022/ws"
             }
 
             Button {
@@ -152,10 +154,24 @@ ApplicationWindow {
                 enabled: !socket.active
                 text: qsTr("Connect")
                 onClicked: {
-                    if (!socket.active)
+                    if (!socket.active) {
+                        socket.url = serverAddress.text
+                        console.log("Connecting to ",socket.url)
                         socket.active = true;
+                    }
                 }
             }
+
+
+        }
+
+        Button {
+            id: helButton
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            anchors.bottom: row1.bottom
+            text: qsTr("Help");
+            onClicked: messageDialog.visible = true
         }
 
         Row {
@@ -164,6 +180,14 @@ ApplicationWindow {
             anchors.bottom: controllerRect.top
             anchors.bottomMargin: 10
             spacing: 8
+
+            CheckBox {
+                id: tiltCheckBox
+                style: CheckBoxStyle {label: Text {color:"#cdf505";
+                        text: qsTr("Use tilting") } }
+                checked: true
+
+            }
 
             Label {
                 text: qsTr("Pan (Left<->Right): ")
@@ -188,6 +212,7 @@ ApplicationWindow {
                         console.log(sendString);
                         if (socket.status == WebSocket.Open)
                             socket.sendTextMessage(sendString); // to be convertet in server
+
                     }
 
                 }
@@ -304,6 +329,7 @@ ApplicationWindow {
                     if (socket.status == WebSocket.Open)
                         socket.sendTextMessage(JS.NOTEON.toString());
                     airColumnRect.visible = true;
+                    csound.compileOrc("schedule 2, 0, -1")
                 }
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
@@ -311,6 +337,7 @@ ApplicationWindow {
                         socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
                     JS.note = -1; JS.noiseLevel = -1;
+                    csound.compileOrc("schedule -2, 0, 0")
                 }
                 onMouseXChanged: if (containsPress) {
                                      setNote(mouseX)
