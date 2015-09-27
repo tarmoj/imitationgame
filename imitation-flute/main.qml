@@ -46,8 +46,7 @@ ApplicationWindow {
             console.log("New note:",JS.note);
             airColumnRect.width = (controllerArea.x -  airColumnRect.x) + (JS.notes - JS.note)*noteStep; // start the air rect from embouchure, controller starts from the keys
             noteLabel.text = qsTr("Note: ")+JS.note.toString();
-            //TEST:
-            csound.compileOrc(" gkValue init " + JS.note/11.0)
+
 
         }
 
@@ -102,7 +101,8 @@ ApplicationWindow {
                        "Lower keys (longer aircolumn) play lower notes.\n"+
                        "\nIf you move finger or mouse up in the dark control area, the sound will get more noisy.\n"+
                        "You can control panning (sound to more left or right) and vibrato intensity with tilting the device.\nPanning (x-axis): tilt the left or right side of the phone up or down\nVibrato (y axis): turn the screen from horizontal position to up or down\n" +
-                       "You can swich out the sensor control (uncheck \'Use tilting\') and move thse sliders by hand\n\nThe app send signal about your actions to server that plays the sounds for you. The app does not make any sound itself.")
+                       "You can swich out the sensor control (uncheck \'Use tilting\') and move thse sliders by hand\n\nThe app sends signal about your actions to server that plays the sounds for you. The app does not make any sound itself.\n"+
+                       "If \'Connect\' button is grayed out, you are connected and ready to go.")
             onAccepted: {
                 visible = false
             }
@@ -329,7 +329,6 @@ ApplicationWindow {
                     if (socket.status == WebSocket.Open)
                         socket.sendTextMessage(JS.NOTEON.toString());
                     airColumnRect.visible = true;
-                    csound.compileOrc("schedule 2, 0, -1")
                 }
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
@@ -337,7 +336,6 @@ ApplicationWindow {
                         socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
                     JS.note = -1; JS.noiseLevel = -1;
-                    csound.compileOrc("schedule -2, 0, 0")
                 }
                 onMouseXChanged: if (containsPress) {
                                      setNote(mouseX)

@@ -3,6 +3,5 @@
         <file>main.qml</file>
         <file>js-functions.js</file>
         <file>flute.png</file>
-        <file>test.csd</file>
     </qresource>
 </RCC>
