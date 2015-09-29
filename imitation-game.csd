@@ -196,7 +196,7 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	aout = avalue*iamp*aenv2
 	aout clip aout, 0, 0dbfs*0.95  ; for any case
 	if iplayer = 1000 then ; filter higher harmonics from low flutes
-		aout butterlp aout*8, 4*ifqc ; cut higher overtones on low notes, make it s bit louder
+		aout butterlp aout*3, 4*ifqc ; cut higher overtones on low notes, make it s bit louder
   	endif
   	aL,aR pan2 aout, kpan
   	gaL += aL
@@ -254,6 +254,7 @@ endin
 
 </CsScore>
 </CsoundSynthesizer>
+
 
 
 
@@ -632,7 +633,7 @@ endin
 </bsbPanel>
 <bsbPresets>
 </bsbPresets>
-<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1251" y="295" width="655" height="346" visible="true" loopStart="0" loopEnd="0">i 10 0 20 1000 16 0 
+<EventPanel name="play 1902" tempo="60.00000000" loop="8.00000000" x="1251" y="295" width="655" height="346" visible="false" loopStart="0" loopEnd="0">i 10 0 20 1000 16 0 
 i 10 0 30 0 0 0 
 i 10 0 1 0 300 0.9 
 i 10 0 2 0 400 0.2 

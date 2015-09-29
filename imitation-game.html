@@ -183,6 +183,17 @@
 	
 	function sendNote(note) {}
 	
+	var testing = false;
+	
+	function startTest(testers) {
+		testing = true;
+		for (var i=0;i<testers;i++)
+			tester()
+	
+	}
+	
+	function stopTest() {testing=false;}
+	
 	function tester() { 
 		var player = 20+Math.floor(Math.random()*79);
 		var interval = 100 ; // in millisconds
@@ -200,6 +211,7 @@
 		setTimeout(function(){ 
 			clearInterval(channelTester);
 			doSendArray(new Int8Array([NOTEOFF,100,player])); },1000+Math.random()*8000);
+			if (testing) tester(); // recursive call to itsself
 
 		
 	}
@@ -227,8 +239,9 @@
 	</script>
   </head>
   <body>
-    <span style='margin-left:440px'><small><i><a href="echogame_est.html">Eesti</a></i></small></span>
-    <h1>IMITATION GAME. <i>TEST. </i></h1><br>MAKES SOUND ONLY ON SPOT <br>
+    <span style='margin-left:440px'>
+<!--    <small><i><a href="echogame_est.html">Eesti</a></i></small></span>-->
+    <h1>IMITATION GAME</h1><br>
     <i>Touch/click the blue area to play flute sounds.</i><br>
     <form name="myform">
 
@@ -242,7 +255,7 @@
     
    
     
-    Server address: <input value="ws://localhost:22022/ws" id="url" type="text"><br>
+    Server address: <input value="ws://192.168.1.199:22022/ws" id="url" type="text"><br>
     <button type="button" id="connectButton" onclick="doConnect();">Connect</button>
     <!--<button type="button" id="disconnectButton">Disonnect</button>-->
     <br>
