@@ -4,10 +4,10 @@
 ; based on Hans Mikelson's example of waveguid flute http://www.eumus.edu.uy/eme/ensenanza/electivas/csound/materiales/book_chapters/19mathmodels/19math_models.htm
 ; (c) Tarmo Johannes tarmo@otsakool.edu.ee
 
-<CsoundSynthesizer>
+<CsoundSynthesizer> 
 <CsOptions>
 -odac:system:playback_ -+rtaudio=jack -d
--+rtmidi=alsaraw -Ma
++rtmidi=alsaraw -Ma
 </CsOptions>
 <CsInstruments>
 
@@ -196,7 +196,7 @@ instr     flute,10 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	aout = avalue*iamp*aenv2
 	aout clip aout, 0, 0dbfs*0.95  ; for any case
 	if iplayer = 1000 then ; filter higher harmonics from low flutes
-		aout butterlp aout*3, 4*ifqc ; cut higher overtones on low notes, make it s bit louder
+		aout butterlp aout*8, 4*ifqc ; cut higher overtones on low notes, make it s bit louder
   	endif
   	aL,aR pan2 aout, kpan
   	gaL += aL
@@ -272,6 +272,10 @@ endin
 
 
 
+
+
+
+
 <bsbPanel>
  <label>Widgets</label>
  <objectName/>
@@ -286,7 +290,7 @@ endin
   <g>255</g>
   <b>255</b>
  </bgcolor>
- <bsbObject type="BSBScrollNumber" version="2">
+ <bsbObject version="2" type="BSBScrollNumber">
   <objectName>step0</objectName>
   <x>119</x>
   <y>153</y>
@@ -319,7 +323,7 @@ endin
   <randomizable group="0">false</randomizable>
   <mouseControl act=""/>
  </bsbObject>
- <bsbObject type="BSBScope" version="2">
+ <bsbObject version="2" type="BSBScope">
   <objectName/>
   <x>85</x>
   <y>316</y>
@@ -337,7 +341,7 @@ endin
   <dispy>1.00000000</dispy>
   <mode>0.00000000</mode>
  </bsbObject>
- <bsbObject type="BSBVSlider" version="2">
+ <bsbObject version="2" type="BSBVSlider">
   <objectName>volume</objectName>
   <x>57</x>
   <y>6</y>
@@ -349,13 +353,13 @@ endin
   <midicc>1</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
-  <value>0.60000000</value>
+  <value>0.40944882</value>
   <mode>lin</mode>
   <mouseControl act="jump">continuous</mouseControl>
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>38</x>
   <y>108</y>
@@ -384,7 +388,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>34</x>
   <y>152</y>
@@ -413,7 +417,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBVSlider" version="2">
+ <bsbObject version="2" type="BSBVSlider">
   <objectName>feedback</objectName>
   <x>221</x>
   <y>8</y>
@@ -421,8 +425,8 @@ endin
   <height>100</height>
   <uuid>{4467df67-d9f2-4636-8198-69662d48a704}</uuid>
   <visible>true</visible>
-  <midichan>0</midichan>
-  <midicc>0</midicc>
+  <midichan>1</midichan>
+  <midicc>7</midicc>
   <minimum>0.00000000</minimum>
   <maximum>1.00000000</maximum>
   <value>0.00000000</value>
@@ -431,7 +435,7 @@ endin
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>193</x>
   <y>111</y>
@@ -460,7 +464,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>25</x>
   <y>198</y>
@@ -489,7 +493,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBHSlider" version="2">
+ <bsbObject version="2" type="BSBHSlider">
   <objectName>noise0</objectName>
   <x>122</x>
   <y>197</y>
@@ -507,7 +511,7 @@ endin
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBHSlider" version="2">
+ <bsbObject version="2" type="BSBHSlider">
   <objectName>pan0</objectName>
   <x>124</x>
   <y>230</y>
@@ -525,7 +529,7 @@ endin
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBHSlider" version="2">
+ <bsbObject version="2" type="BSBHSlider">
   <objectName>vibrato0</objectName>
   <x>124</x>
   <y>264</y>
@@ -543,7 +547,7 @@ endin
   <resolution>-1.00000000</resolution>
   <randomizable group="0">false</randomizable>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>27</x>
   <y>235</y>
@@ -572,7 +576,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBLabel" version="2">
+ <bsbObject version="2" type="BSBLabel">
   <objectName/>
   <x>29</x>
   <y>272</y>
@@ -601,7 +605,7 @@ endin
   <borderradius>1</borderradius>
   <borderwidth>1</borderwidth>
  </bsbObject>
- <bsbObject type="BSBDisplay" version="2">
+ <bsbObject version="2" type="BSBDisplay">
   <objectName>pitch</objectName>
   <x>96</x>
   <y>549</y>

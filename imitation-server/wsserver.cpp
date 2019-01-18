@@ -119,7 +119,7 @@ void WsServer::processTextMessage(QString message) // message must be an array o
     if (!pClient) {
         return;
     }
-    qDebug()<<message;
+	//qDebug()<<"TextMessage"<<message;
 	QByteArray data;
 	bool allFine = true;
 	quint8 byte = 0;
