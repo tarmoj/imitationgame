@@ -3,7 +3,7 @@ import QtQuick.Controls 1.3
 import QtQuick.Controls.Styles 1.2
 import QtQuick.Window 2.2
 import QtQuick.Dialogs 1.2
-import Qt.WebSockets 1.0
+import QtWebSockets 1.0
 import QtSensors 5.0
 import "js-functions.js" as JS
 
@@ -44,6 +44,7 @@ ApplicationWindow {
             if (socket.status == WebSocket.Open)
                 socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
             console.log("New note:",JS.note);
+            csound.compileOrc(" gkValue init " + JS.note/11.0)
             airColumnRect.width = (controllerArea.x -  airColumnRect.x) + (JS.notes - JS.note)*noteStep; // start the air rect from embouchure, controller starts from the keys
             noteLabel.text = qsTr("Note: ")+JS.note.toString();
 
@@ -329,12 +330,14 @@ ApplicationWindow {
                     if (socket.status == WebSocket.Open)
                         socket.sendTextMessage(JS.NOTEON.toString());
                     airColumnRect.visible = true;
+                    csound.csEvent("i 2  0 -1");
                 }
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
                     if (socket.status == WebSocket.Open)
                         socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
+                    csound.csEvent("i -2  0 0");
                     JS.note = -1; JS.noiseLevel = -1;
                 }
                 onMouseXChanged: if (containsPress) {
