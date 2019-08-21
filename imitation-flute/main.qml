@@ -40,9 +40,8 @@ ApplicationWindow {
         var noteHere = Math.floor((controllerArea.width - x) / noteStep);
         if (JS.note != noteHere) { // check if note has changed
             JS.note = noteHere;
-            //udpSender.sendNumbersInString(JS.NEWSTEP.toString()+","+JS.note.toString());
-            if (socket.status == WebSocket.Open)
-                socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
+//            if (socket.status == WebSocket.Open)
+//                socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
             console.log("New note:",JS.note);
             csound.setChannel("step", JS.note)
             //csound.compileOrc(" gkValue init " + JS.note/11.0)
@@ -60,8 +59,8 @@ ApplicationWindow {
         var noiseHere = Math.floor((controllerRect.height - y )/ noiseStep);
         if (JS.noiseLevel != noiseHere) { // check if note has changed
             JS.noiseLevel = noiseHere;
-            if (socket.status == WebSocket.Open)
-                socket.sendTextMessage(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // to be convertet in server
+//            if (socket.status == WebSocket.Open)
+//                socket.sendTextMessage(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // to be convertet in server
             console.log("New noiseLevel:",JS.noiseLevel );
             csound.setChannel("noise", JS.noiseLevel/10)
             noiseLabel.text = qsTr("Noise level: ")+JS.noiseLevel.toString();
@@ -83,13 +82,16 @@ ApplicationWindow {
         onStatusChanged: if (socket.status == WebSocket.Error) {
                              console.log("Error: " + socket.errorString)
                              socket.active = false;
+                             connectButton.text = "Connect"
+                         } else if (socket.status == WebSocket.Connecting) {
+                             connectButton.text = "Connecting"
                          } else if (socket.status == WebSocket.Open) {
                              console.log("Socket open")
-                             //socket.sendTextMessage("Hello World")
+                             connectButton.text = "Connected"
                          } else if (socket.status == WebSocket.Closed) {
                              console.log("Socket closed")
                              socket.active = false;
-                             //messageBox.text += "\nSocket closed"
+                             connectButton.text = "Connect"
                          }
         active: false
     }
@@ -149,8 +151,8 @@ ApplicationWindow {
 
             TextField {
                 id: serverAddress
-                width: 200
-                text: "ws://192.168.1.199:11011/ws"
+                width: mainRect.width/2 // was 200
+                text: "ws://192.168.1.130:11011/ws"
             }
 
             Button {
@@ -196,11 +198,14 @@ ApplicationWindow {
             Label {
                 text: qsTr("Pan (Left<->Right): ")
                 color: "#cdf505"
+                visible: false
             }
 
+
             Slider {
+                visible: false
                 id: panSlider
-                width: 150
+                width: mainRect.width/5 // 150
                 maximumValue: 100
                 stepSize: 1
                 value: 50
@@ -211,11 +216,10 @@ ApplicationWindow {
                     if (currentPan != pan) {
                         pan = currentPan;
                         console.log("New pan: ", pan);
-                        //doSendArray(new Int8Array([NEWPAN,pan]));
-                        var sendString = JS.NEWPAN.toString() + "," + pan.toString()
+/*                        var sendString = JS.NEWPAN.toString() + "," + pan.toString()
                         console.log(sendString);
                         if (socket.status == WebSocket.Open)
-                            socket.sendTextMessage(sendString); // to be convertet in server
+                            socket.sendTextMessage(sendString); // to be convertet in server*/
 
                     }
 
@@ -232,7 +236,7 @@ ApplicationWindow {
 
             Slider {
                 id: vibratoSlider
-                width: 150
+                width: panSlider.width//150
                 maximumValue: 100
                 stepSize: 1
                 value: 0
@@ -243,11 +247,12 @@ ApplicationWindow {
                     if (currentV != vibrato) {
                         vibrato = currentV;
                         console.log("New vibrato: ", vibrato);
-                        var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
+
                         csound.setChannel("vibrato", vibrato/10)
+//                        var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
                         //console.log(sendString);
-                        if (socket.status == WebSocket.Open)
-                            socket.sendTextMessage(sendString); // to be convertet in server
+//                        if (socket.status == WebSocket.Open)
+//                            socket.sendTextMessage(sendString); // to be convertet in server
                     }
 
                 }
@@ -330,16 +335,15 @@ ApplicationWindow {
                 onPressed: {
                     setNote(mouseX);
                     setNoise(mouseY);
-                    //udpSender.sendNumbersInString(JS.NOTEON.toString());
-                    if (socket.status == WebSocket.Open)
-                        socket.sendTextMessage(JS.NOTEON.toString());
+//                    if (socket.status == WebSocket.Open)
+//                        socket.sendTextMessage(JS.NOTEON.toString());
                     airColumnRect.visible = true;
                     csound.csEvent("i 1  0 -1");
                 }
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
-                    if (socket.status == WebSocket.Open)
-                        socket.sendTextMessage(JS.NOTEOFF.toString());
+//                    if (socket.status == WebSocket.Open)
+//                        socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
                     csound.csEvent("i -1  0 0");
                     JS.note = -1; JS.noiseLevel = -1;
