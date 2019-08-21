@@ -8,8 +8,8 @@ import QtSensors 5.0
 import "js-functions.js" as JS
 
 ApplicationWindow {
-    title: qsTr("Imitation-flute")
-    width: 640
+    title: qsTr("Flute-instrument")
+    width: 660
     height: 480
     visible: true
 
@@ -44,7 +44,8 @@ ApplicationWindow {
             if (socket.status == WebSocket.Open)
                 socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
             console.log("New note:",JS.note);
-            csound.compileOrc(" gkValue init " + JS.note/11.0)
+            csound.setChannel("step", JS.note)
+            //csound.compileOrc(" gkValue init " + JS.note/11.0)
             airColumnRect.width = (controllerArea.x -  airColumnRect.x) + (JS.notes - JS.note)*noteStep; // start the air rect from embouchure, controller starts from the keys
             noteLabel.text = qsTr("Note: ")+JS.note.toString();
 
@@ -59,10 +60,10 @@ ApplicationWindow {
         var noiseHere = Math.floor((controllerRect.height - y )/ noiseStep);
         if (JS.noiseLevel != noiseHere) { // check if note has changed
             JS.noiseLevel = noiseHere;
-            //udpSender.sendNumbersInString(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // send maxSteps as 3rd parameter
             if (socket.status == WebSocket.Open)
                 socket.sendTextMessage(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // to be convertet in server
             console.log("New noiseLevel:",JS.noiseLevel );
+            csound.setChannel("noise", JS.noiseLevel/10)
             noiseLabel.text = qsTr("Noise level: ")+JS.noiseLevel.toString();
         }
 
@@ -71,9 +72,13 @@ ApplicationWindow {
 
     WebSocket {
         id: socket
-        url: "ws://localhost:22022/ws"
+        url: "ws://localhost:11011/ws"
         onTextMessageReceived: {
            console.log("Received message: ",message);
+           if (message.split(" ")[0]==="i2") {
+               console.log("i2 message", message)
+               csound.csEvent(message)
+           }
         }
         onStatusChanged: if (socket.status == WebSocket.Error) {
                              console.log("Error: " + socket.errorString)
@@ -133,8 +138,6 @@ ApplicationWindow {
             }
         }
 
-
-
         Row {
             x:5; y:5
             id: row1
@@ -147,7 +150,7 @@ ApplicationWindow {
             TextField {
                 id: serverAddress
                 width: 200
-                text: "ws://192.168.1.199:22022/ws"
+                text: "ws://192.168.1.199:11011/ws"
             }
 
             Button {
@@ -241,6 +244,7 @@ ApplicationWindow {
                         vibrato = currentV;
                         console.log("New vibrato: ", vibrato);
                         var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
+                        csound.setChannel("vibrato", vibrato/10)
                         //console.log(sendString);
                         if (socket.status == WebSocket.Open)
                             socket.sendTextMessage(sendString); // to be convertet in server
@@ -303,11 +307,11 @@ ApplicationWindow {
                 z: 2
 
                 Behavior on width {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation { duration: 50 }
                 }
 
                 Behavior on height {
-                        NumberAnimation { duration: 100 }
+                        NumberAnimation { duration: 50 }
                 }
 
             }
@@ -330,14 +334,14 @@ ApplicationWindow {
                     if (socket.status == WebSocket.Open)
                         socket.sendTextMessage(JS.NOTEON.toString());
                     airColumnRect.visible = true;
-                    csound.csEvent("i 2  0 -1");
+                    csound.csEvent("i 1  0 -1");
                 }
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
                     if (socket.status == WebSocket.Open)
                         socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
-                    csound.csEvent("i -2  0 0");
+                    csound.csEvent("i -1  0 0");
                     JS.note = -1; JS.noiseLevel = -1;
                 }
                 onMouseXChanged: if (containsPress) {
