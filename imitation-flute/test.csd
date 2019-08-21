@@ -91,7 +91,7 @@ instr     flute,1 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	aflute1     deltapi afqc ; afqc depends on kfreq
 			 delayw    avalue
 
-	aout = avalue*iamp*aenv2;*chnget:k("volume")
+	aout = avalue*iamp*aenv2*chnget:k("volume")
 	aout clip aout, 0, 0dbfs*0.95  ; for any case
 
 	;aL,aR pan2 aout, kpan

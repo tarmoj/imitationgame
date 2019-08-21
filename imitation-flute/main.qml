@@ -15,14 +15,17 @@ ApplicationWindow {
 
     TiltSensor { //TODO: add a checkbox : use tilt sensor for pan and vibrato -  checked
         id:tilt
-        active:true
+        active: tiltCheckBox.checked//true
 
         onReadingChanged: { // TODO: sea ainult siis kui muutus on teatud määrast suurem
             if (tiltCheckBox.checked) {
-            var convert2pan = reading.xRotation+50
+            var convert2pan =  reading.xRotation+50
             convert2pan = Math.max(panSlider.minimumValue ,Math.min(convert2pan,panSlider.maximumValue )) // limit to 0..100
-            if (Math.abs(convert2pan-panSlider.value) > 5 )
+            if (Math.abs(convert2pan-panSlider.value) > 5 ) {
                 panSlider.value = convert2pan
+                //temporary -  use it for volume, too:
+                volumeSlider.value = convert2pan
+            }
 
             var convert2vibrato = Math.abs(reading.yRotation*2)
             convert2vibrato = Math.max(vibratoSlider.minimumValue ,Math.min(convert2vibrato,vibratoSlider.maximumValue )) // limit to 0..100
@@ -157,7 +160,7 @@ ApplicationWindow {
 
             Button {
                 id: connectButton
-                enabled: !socket.active
+                enabled: !(socket.status==WebSocket.Open)
                 text: qsTr("Connect")
                 onClicked: {
                     if (!socket.active) {
@@ -192,6 +195,25 @@ ApplicationWindow {
                 style: CheckBoxStyle {label: Text {color:"#cdf505";
                         text: qsTr("Use tilting") } }
                 checked: true
+
+            }
+
+            Label {
+                text: qsTr("Volume: ")
+                color: "#cdf505"
+            }
+
+
+            Slider {
+                id: volumeSlider
+                width: mainRect.width/5 // 150
+                maximumValue: 100
+                stepSize: 1
+                value: 50
+
+                onValueChanged: {
+                    csound.setChannel("volume", value/100.0)
+                }
 
             }
 
@@ -387,10 +409,11 @@ ApplicationWindow {
             text: qsTr("noise: 0")
         }
 
-        Label {
-            id: tiltLabel
-            text: qsTr("tilt x: " + Math.floor(tilt.reading.xRotation) + "y: " + Math.floor(tilt.reading.yRotation))
-        }
+
+//        Label {
+//            id: tiltLabel
+//            text: qsTr("tilt x: " + Math.floor(tilt.reading.xRotation) + "y: " + Math.floor(tilt.reading.yRotation))
+//        }
 
 
     }
