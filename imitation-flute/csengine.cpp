@@ -54,7 +54,7 @@ int CsEngine::open(QString csd)
 //        tempFile.write(file.readAll());
 //    }
 
-    qDebug()<<tempFile->readAll();
+	//qDebug()<<tempFile->readAll();
 
 	if (!cs->Compile( tempFile->fileName().toLocal8Bit().data()) ){
         return 0;
@@ -72,7 +72,7 @@ void CsEngine::stop()
 
 void CsEngine::setChannel(const QString &channel, MYFLT value)
 {
-	qDebug()<<"setChannel "<<channel<<" value: "<<value;
+	//qDebug()<<"setChannel "<<channel<<" value: "<<value;
 	cs->SetChannel(channel.toLocal8Bit(), value); // does not work
 	//QString command = "chnset "+ QString::number(value) + ",\""+channel+" \"\n";
 	//cs->EvalCode(command.toLocal8Bit()); // bad workaround to set channel values...
@@ -80,11 +80,9 @@ void CsEngine::setChannel(const QString &channel, MYFLT value)
 
 void CsEngine::csEvent(const QString &event_string)
 {
-	qDebug()<<"CSEVENT";
+	//qDebug()<<"CSEVENT";
 	QString evalLine = "scoreline_i + {{ " + event_string + "}}";
-	//cs->InputMessage("i 1 0 1"); // DOES NOT WORK ON ANDROID???
 	cs->InputMessage(event_string.toLocal8Bit());
-	//cs->EvalCode(evalLine.toLocal8Bit());
 }
 
 void CsEngine::compileOrc(const QString &code)

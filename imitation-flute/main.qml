@@ -19,21 +19,21 @@ ApplicationWindow {
 
         onReadingChanged: { // TODO: sea ainult siis kui muutus on teatud määrast suurem
             if (tiltCheckBox.checked) {
-            var convert2pan =  reading.xRotation+50
-            convert2pan = Math.max(panSlider.minimumValue ,Math.min(convert2pan,panSlider.maximumValue )) // limit to 0..100
-            if (Math.abs(convert2pan-panSlider.value) > 5 ) {
-                panSlider.value = convert2pan
-                //temporary -  use it for volume, too:
-                volumeSlider.value = convert2pan
-            }
+                var convert2pan =  reading.xRotation+50
+                convert2pan = Math.max(panSlider.minimumValue ,Math.min(convert2pan,panSlider.maximumValue )) // limit to 0..100
+                if (Math.abs(convert2pan-panSlider.value) > 5 ) {
+                    panSlider.value = convert2pan
+                    //temporary -  use it for volume, too:
+                    volumeSlider.value = convert2pan
+                }
 
-            var convert2vibrato = Math.abs(reading.yRotation*2)
-            convert2vibrato = Math.max(vibratoSlider.minimumValue ,Math.min(convert2vibrato,vibratoSlider.maximumValue )) // limit to 0..100
-            if (Math.abs(convert2vibrato-vibratoSlider.value) > 10 )
-                vibratoSlider.value = convert2vibrato
+                var convert2vibrato = Math.abs(reading.yRotation*2)
+                convert2vibrato = Math.max(vibratoSlider.minimumValue ,Math.min(convert2vibrato,vibratoSlider.maximumValue )) // limit to 0..100
+                if (Math.abs(convert2vibrato-vibratoSlider.value) > 10 )
+                    vibratoSlider.value = convert2vibrato
 
             }
-         }
+        }
 
     }
 
@@ -43,8 +43,8 @@ ApplicationWindow {
         var noteHere = Math.floor((controllerArea.width - x) / noteStep);
         if (JS.note != noteHere) { // check if note has changed
             JS.note = noteHere;
-//            if (socket.status == WebSocket.Open)
-//                socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
+            //            if (socket.status == WebSocket.Open)
+            //                socket.sendTextMessage(JS.NEWSTEP.toString()+","+JS.note.toString()); // to be convertet in server
             console.log("New note:",JS.note);
             csound.setChannel("step", JS.note)
             //csound.compileOrc(" gkValue init " + JS.note/11.0)
@@ -62,8 +62,8 @@ ApplicationWindow {
         var noiseHere = Math.floor((controllerRect.height - y )/ noiseStep);
         if (JS.noiseLevel != noiseHere) { // check if note has changed
             JS.noiseLevel = noiseHere;
-//            if (socket.status == WebSocket.Open)
-//                socket.sendTextMessage(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // to be convertet in server
+            //            if (socket.status == WebSocket.Open)
+            //                socket.sendTextMessage(JS.NEWNOISE.toString()+","+JS.noiseLevel.toString()+","+JS.noiseLevels.toString()); // to be convertet in server
             console.log("New noiseLevel:",JS.noiseLevel );
             csound.setChannel("noise", JS.noiseLevel/10)
             noiseLabel.text = qsTr("Noise level: ")+JS.noiseLevel.toString();
@@ -74,13 +74,22 @@ ApplicationWindow {
 
     WebSocket {
         id: socket
-        url: "ws://localhost:11011/ws"
+        url: "ws://192.168.1.130:11011/ws"
         onTextMessageReceived: {
-           console.log("Received message: ",message);
-           if (message.split(" ")[0]==="i2") {
-               console.log("i2 message", message)
-               csound.csEvent(message)
-           }
+            console.log("Received message: ",message);
+            if (message.split(" ")[0]==="i2") {
+                console.log("i2 message", message)
+                csound.csEvent(message)
+            }
+
+            if (message.split(" ")[0]==="paused") {
+                coverRect.visible = true
+            }
+
+            if (message.split(" ")[0]==="continue") {
+                coverRect.visible = false
+            }
+
         }
         onStatusChanged: if (socket.status == WebSocket.Error) {
                              console.log("Error: " + socket.errorString)
@@ -108,15 +117,15 @@ ApplicationWindow {
     MessageDialog { // TODO: for info etc
         id: messageDialog
         title: qsTr("instructions  - imitation flute")
-            text: qsTr("Touch the flute on its keys to play a note. \n"+
-                       "Lower keys (longer aircolumn) play lower notes.\n"+
-                       "\nIf you move finger or mouse up in the dark control area, the sound will get more noisy.\n"+
-                       "You can control panning (sound to more left or right) and vibrato intensity with tilting the device.\nPanning (x-axis): tilt the left or right side of the phone up or down\nVibrato (y axis): turn the screen from horizontal position to up or down\n" +
-                       "You can swich out the sensor control (uncheck \'Use tilting\') and move thse sliders by hand\n\nThe app sends signal about your actions to server that plays the sounds for you. The app does not make any sound itself.\n"+
-                       "If \'Connect\' button is grayed out, you are connected and ready to go.")
-            onAccepted: {
-                visible = false
-            }
+        text: qsTr("Touch the flute on its keys to play a note. \n"+
+                   "Lower keys (longer aircolumn) play lower notes.\n"+
+                   "\nIf you move finger or mouse up in the dark control area, the sound will get more noisy.\n"+
+                   "You can control panning (sound to more left or right) and vibrato intensity with tilting the device.\nPanning (x-axis): tilt the left or right side of the phone up or down\nVibrato (y axis): turn the screen from horizontal position to up or down\n" +
+                   "You can swich out the sensor control (uncheck \'Use tilting\') and move thse sliders by hand\n\nThe app sends signal about your actions to server that plays the sounds for you. The app does not make any sound itself.\n"+
+                   "If \'Connect\' button is grayed out, you are connected and ready to go.")
+        onAccepted: {
+            visible = false
+        }
     }
 
     Rectangle {
@@ -238,7 +247,7 @@ ApplicationWindow {
                     if (currentPan != pan) {
                         pan = currentPan;
                         console.log("New pan: ", pan);
-/*                        var sendString = JS.NEWPAN.toString() + "," + pan.toString()
+                        /*                        var sendString = JS.NEWPAN.toString() + "," + pan.toString()
                         console.log(sendString);
                         if (socket.status == WebSocket.Open)
                             socket.sendTextMessage(sendString); // to be convertet in server*/
@@ -271,10 +280,10 @@ ApplicationWindow {
                         console.log("New vibrato: ", vibrato);
 
                         csound.setChannel("vibrato", vibrato/10)
-//                        var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
+                        //                        var sendString = JS.NEWVIBRATO.toString() + "," + vibrato.toString()
                         //console.log(sendString);
-//                        if (socket.status == WebSocket.Open)
-//                            socket.sendTextMessage(sendString); // to be convertet in server
+                        //                        if (socket.status == WebSocket.Open)
+                        //                            socket.sendTextMessage(sendString); // to be convertet in server
                     }
 
                 }
@@ -334,11 +343,11 @@ ApplicationWindow {
                 z: 2
 
                 Behavior on width {
-                        NumberAnimation { duration: 50 }
+                    NumberAnimation { duration: 50 }
                 }
 
                 Behavior on height {
-                        NumberAnimation { duration: 50 }
+                    NumberAnimation { duration: 50 }
                 }
 
             }
@@ -352,20 +361,20 @@ ApplicationWindow {
                 height: parent.height
                 //anchors.fill: parent
 
-//                Rectangle {anchors.fill:parent; color:"blue"; z:1} // test, to make it visible
+                //                Rectangle {anchors.fill:parent; color:"blue"; z:1} // test, to make it visible
 
                 onPressed: {
                     setNote(mouseX);
                     setNoise(mouseY);
-//                    if (socket.status == WebSocket.Open)
-//                        socket.sendTextMessage(JS.NOTEON.toString());
+                    //                    if (socket.status == WebSocket.Open)
+                    //                        socket.sendTextMessage(JS.NOTEON.toString());
                     airColumnRect.visible = true;
                     csound.csEvent("i 1  0 -1");
                 }
                 onReleased: {
                     //udpSender.sendNumbersInString(JS.NOTEOFF.toString());
-//                    if (socket.status == WebSocket.Open)
-//                        socket.sendTextMessage(JS.NOTEOFF.toString());
+                    //                    if (socket.status == WebSocket.Open)
+                    //                        socket.sendTextMessage(JS.NOTEOFF.toString());
                     airColumnRect.visible = false;
                     csound.csEvent("i -1  0 0");
                     JS.note = -1; JS.noiseLevel = -1;
@@ -373,13 +382,13 @@ ApplicationWindow {
                 onMouseXChanged: if (containsPress) {
                                      setNote(mouseX)
 
-                }
+                                 }
 
                 onMouseYChanged: if (containsPress) {
                                      setNoise(mouseY);
                                      //console.log("Y:",mouseY)
                                      airColumnRect.height = Math.max( (this.height - mouseY), fluteImage.height+5) // does not work...
-                }
+                                 }
 
 
 
@@ -392,31 +401,50 @@ ApplicationWindow {
         }
 
 
-    Row {
-        id:statusRow
-        spacing: 5
-        x: 5
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: 5
+        Row {
+            id:statusRow
+            spacing: 5
+            x: 5
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 5
 
-        Label {
-            id: noteLabel
-            text: qsTr("note: 0")
+            Label {
+                id: noteLabel
+                text: qsTr("note: 0")
+            }
+
+            Label {
+                id: noiseLabel
+                text: qsTr("noise: 0")
+            }
+
+
+            //        Label {
+            //            id: tiltLabel
+            //            text: qsTr("tilt x: " + Math.floor(tilt.reading.xRotation) + "y: " + Math.floor(tilt.reading.yRotation))
+            //        }
+
+
         }
 
-        Label {
-            id: noiseLabel
-            text: qsTr("noise: 0")
+        Rectangle {
+            id: coverRect
+            visible: false
+            color: "#80808080"
+            anchors.centerIn: parent
+            width: 0.95*parent.width
+            height: 0.95*parent.height
+
+            Label {
+                id: infoMessageLabel
+                color: "#ffffff"
+                opacity: 1
+                anchors.centerIn: parent
+                text: "Input disabled. Please wait"
+            }
+
+            MouseArea {anchors.fill:parent} // block click to anything that us under
         }
-
-
-//        Label {
-//            id: tiltLabel
-//            text: qsTr("tilt x: " + Math.floor(tilt.reading.xRotation) + "y: " + Math.floor(tilt.reading.yRotation))
-//        }
-
-
-    }
 
 
     }
