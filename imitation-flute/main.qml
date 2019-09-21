@@ -74,7 +74,7 @@ ApplicationWindow {
 
     WebSocket {
         id: socket
-        url: "ws://192.168.1.130:11011/ws"
+        url: "ws://192.168.1.199:11011/ws"
         onTextMessageReceived: {
             console.log("Received message: ",message);
             if (message.split(" ")[0]==="i2") {
@@ -164,7 +164,7 @@ ApplicationWindow {
             TextField {
                 id: serverAddress
                 width: mainRect.width/2 // was 200
-                text: "ws://192.168.1.130:11011/ws"
+                text: "ws://192.168.1.199:11011/ws"
             }
 
             Button {
@@ -430,7 +430,7 @@ ApplicationWindow {
         Rectangle {
             id: coverRect
             visible: false
-            color: "#80808080"
+            color: "#E0808080"
             anchors.centerIn: parent
             width: 0.95*parent.width
             height: 0.95*parent.height
