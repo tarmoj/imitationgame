@@ -120,7 +120,7 @@ ApplicationWindow {
         text: qsTr("Touch the flute on its keys to play a note. \n"+
                    "Lower keys (longer aircolumn) play lower notes.\n"+
                    "\nIf you move finger or mouse up in the dark control area, the sound will get more noisy.\n"+
-                   "You can control panning (sound to more left or right) and vibrato intensity with tilting the device.\nPanning (x-axis): tilt the left or right side of the phone up or down\nVibrato (y axis): turn the screen from horizontal position to up or down\n" +
+                   "You can control volume and vibrato intensity with tilting the device.\nVolume (x-axis): tilt the left or right side of the phone up or down\nVibrato (y axis): turn the screen from horizontal position to up or down\n" +
                    "You can swich out the sensor control (uncheck \'Use tilting\') and move thse sliders by hand\n\nThe app sends signal about your actions to server that plays the sounds for you. The app does not make any sound itself.\n"+
                    "If \'Connect\' button is grayed out, you are connected and ready to go.")
         onAccepted: {
@@ -343,11 +343,11 @@ ApplicationWindow {
                 z: 2
 
                 Behavior on width {
-                    NumberAnimation { duration: 50 }
+                    NumberAnimation { duration: 20 }
                 }
 
                 Behavior on height {
-                    NumberAnimation { duration: 50 }
+                    NumberAnimation { duration: 20 }
                 }
 
             }

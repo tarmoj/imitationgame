@@ -17,7 +17,7 @@ chn_k "volume", 3
 
 chnset 0.6, "volume"
 
-gkSteps[] fillarray 1, 73/71, 76/71, 82/71, 92/71,  4/3 ;1,9/8,5/4,11/8,3/2,13/8,7/4,2,17/8,18/8,19/8, 21/8
+gkSteps[] fillarray 1, 72/70, 80/70, 84/71, 93/70,  96/70 ;1,9/8,5/4,11/8,3/2,13/8,7/4,2,17/8,18/8,19/8, 21/8
 ; frequencies: 71 Hz (põhitoon), 76 Hz, 92 Hz => 1, 76/71, 92/71
 
 schedule 1,  0,     1,   0, 0,0.5
@@ -90,8 +90,9 @@ instr     flute,1 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	atemp2    delayr    1/ifqc
 	aflute1     deltapi afqc ; afqc depends on kfreq
 			 delayw    avalue
+	kvolume port chnget:k("volume"), 0.02, chnget:i("volume")
 
-	aout = avalue*iamp*aenv2*chnget:k("volume")
+	aout = avalue*iamp*aenv2*kvolume
 	aout clip aout, 0, 0dbfs*0.95  ; for any case
 
 	;aL,aR pan2 aout, kpan
@@ -104,7 +105,7 @@ instr bell
 	iamp= p4
 	ifreq=p5
 	aenv adsr 0.1,0.1,0.5,p3*0.75
-	asig poscil iamp*aenv*chnget:k("volume"),  ifreq ; very simple side sound
+	asig poscil iamp*aenv,  ifreq ; very simple side sound
 	outs asig, asig
 endin
 

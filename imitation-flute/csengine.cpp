@@ -32,7 +32,7 @@ void CsEngine::play() {
 		cs->Start();
 		cs->Perform();
 		while(cs->PerformKsmps()==0 && mStop==false ) {
-			QCoreApplication::processEvents(); // probably bad solution but works. otherwise other slots will never be called
+			//QCoreApplication::processEvents(); // probably bad solution but works. otherwise other slots will never be called
 		}
 
 	//	//free Csound object
