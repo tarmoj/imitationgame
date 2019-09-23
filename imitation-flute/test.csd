@@ -35,7 +35,7 @@ instr     flute,1 ; FLUTE INSTRUMENT BASED ON PERRY COOK'S SLIDE FLUTE
 	ifeedbk1  =         0.43
 	ifeedbk2  =         0.43
 	iplayer = p4 ; to know from which step and noise channel to read
-	iamp = 0.2
+	iamp = 0.5
 	;ipan = (p6==0) ? 0.5 : p6
 
 
